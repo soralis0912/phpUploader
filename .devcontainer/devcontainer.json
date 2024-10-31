@@ -1,11 +1,22 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/php
 {
-	"name": "phpUploader",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "dev",
-	"workspaceFolder": "/workspace",
-	"remoteUser": "vscode",
-	"shutdownAction": "stopCompose",
-	"postCreateCommand": "/bin/sh .devcontainer/postCreateCommand.sh"
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "junstyle.php-cs-fixer",
+                "richie5um2.vscode-sort-json"
+            ],
+            "settings": {
+                "php-cs-fixer.executablePath": "vendor/bin/php-cs-fixer"
+            }
+        }
+    },
+    "dockerComposeFile": "docker-compose.yml",
+    "name": "phpUploader",
+    "postCreateCommand": "/bin/sh .devcontainer/postCreateCommand.sh",
+    "remoteUser": "vscode",
+    "service": "dev",
+    "shutdownAction": "stopCompose",
+    "workspaceFolder": "/workspace"
 }
