@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  dev:
+    build:
+      context: ./dev
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/workspace
+
+  php:
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/var/www/html
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/var/www/html
+    ports:
+      - 8080:80
+
