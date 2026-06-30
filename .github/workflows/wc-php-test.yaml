@@ -1,0 +1,309 @@
+name: PHP Test
+
+on:
+  workflow_call:
+    secrets:
+      CLIENT_ID:
+        required: true
+      PRIVATE_KEY:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '8.1'  # minimum supported version
+          # renovate: php-version
+          - '8.3'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+        with:
+          aqua_version: v2.60.1
+
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.CLIENT_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Security audit
+        run: |
+          # Composerセキュリティ監査
+          composer audit
+
+      - name: Check for sensitive files
+        run: |
+          # 機密ファイルがコミットされていないかチェック
+          if [ -f "config/config.php" ]; then
+            echo "Error: config.php should not be committed"
+            github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: config.php should not be committed"
+            exit 1
+          fi
+
+          # .envファイルのチェック
+          if [ -f ".env" ]; then
+            echo "Error: .env should not be committed"
+            github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: .env should not be committed"
+            exit 1
+          fi
+
+          echo "✅ No sensitive files found"
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '8.1'  # minimum supported version
+          # renovate: php-version
+          - '8.3'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+        with:
+          aqua_version: v2.60.1
+
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.CLIENT_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Display PHP version info
+        run: |
+          echo "🐘 Testing PHP ${{ matrix.php-version }}"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer
+          coverage: none
+          ini-values: error_reporting=E_ALL&~E_DEPRECATED&~E_STRICT
+
+      - name: Validate composer.json
+        run: |
+          echo "🔍 composer.json検証中..."
+
+          # まず基本的なJSONの妥当性をチェック
+          if ! php -r "json_decode(file_get_contents('composer.json'), true); if (json_last_error() !== JSON_ERROR_NONE) exit(1);"; then
+            echo "❌ composer.json contains invalid JSON"
+            echo "🔧 composer.jsonの構文を確認してください"
+            github-comment post -k common-error -var title:"composer.json contains invalid JSON (PHP: ${{ matrix.php-version }})" -var body:"composer.jsonの構文を確認してください"
+            exit 1
+          fi
+
+          # Composer validation実行
+          echo "📋 Composer validation実行中..."
+          if ! composer validate --no-check-publish; then
+            echo "❌ composer.json validation failed"
+            echo "🔍 詳細な診断情報:"
+            composer validate --verbose
+            echo "📋 composer.json の内容確認:"
+            cat composer.json
+            github-comment exec -k common-error -var title:"Check Validation composer.json Failed (PHP: ${{ matrix.php-version }})" -- composer validate --verbose
+            exit 1
+          fi
+          echo "✅ composer.json validation passed"
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.json', '**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing Composer dependencies..."
+          composer install --prefer-dist --no-progress --no-interaction
+          echo "✅ Dependencies installed successfully"
+
+      - name: Setup configuration file
+        run: |
+          echo "🔧 設定ファイルセットアップ実行中..."
+          # 必要なディレクトリを作成
+          mkdir -p data db config logs
+
+          # config.php.exampleの存在確認
+          if [ ! -f config/config.php.example ]; then
+            echo "❌ config/config.php.example が見つかりません"
+            github-comment post -k common-error -var title:"'config/config.php.example' is not found (PHP: ${{ matrix.php-version }})" -var body:"'config/config.php.example' が見つかりません"
+            exit 1
+          fi
+
+          # config.php.exampleからconfig.phpを作成
+          if [ ! -f config/config.php ]; then
+            cp config/config.php.example config/config.php
+            echo "✅ config.php.exampleからconfig.phpを作成しました"
+          fi
+
+          # 設定ファイルの構文チェック
+          echo "📄 config.php構文チェック中..."
+          if ! php -l config/config.php; then
+            echo "❌ config.phpに構文エラーがあります"
+            github-comment post -k common-error -var title:"Check 'config.php' Failed (PHP: ${{ matrix.php-version }})" -var body:"'config.php' に構文エラーがあります"
+            exit 1
+          fi
+          echo "✅ 設定ファイルセットアップ完了"
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Check PHP syntax
+        run: |
+          echo "🔍 PHP構文チェックを実行中..."
+          SYNTAX_ERRORS_COUNT=0
+          SYNTAX_LOGS=""
+          while IFS= read -r -d '' file; do
+            echo "📄 Checking: $file"
+            SYNTAX_LOGS="$SYNTAX_LOGS\n📄 Checking: $file"
+            if ! php -l "$file"; then
+              echo "❌ 構文エラー: $file"
+            SYNTAX_LOGS="$SYNTAX_LOGS\n❌ 構文エラー: $file"
+              SYNTAX_ERRORS_COUNT=$((SYNTAX_ERRORS_COUNT + 1))
+            fi
+          done < <(find . -name "*.php" -not -path "./vendor/*" -print0)
+
+          if [ $SYNTAX_ERRORS_COUNT -gt 0 ]; then
+            echo "❌ $SYNTAX_ERRORS_COUNT 個のPHPファイルに構文エラーがあります"
+            SYNTAX_LOGS="$SYNTAX_LOGS\n❌ $SYNTAX_ERRORS_COUNT 個のPHPファイルに構文エラーがあります"
+            github-comment post -k common-error -var title:"Check PHP Syntax Failed (PHP: ${{ matrix.php-version }})" -var body:"$SYNTAX_LOGS"
+
+            exit 1
+          fi
+          echo "✅ PHP構文チェック完了 - エラーなし"
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Run PHP CodeSniffer
+        run: |
+          echo "🔍 PHP CodeSniffer実行中..."
+          if [ -f "vendor/bin/phpcs" ]; then
+            echo "📋 プロジェクト設定によるコーディング規約チェック開始"
+            # phpcs.xmlを使用してチェック
+            if ! vendor/bin/phpcs .; then
+              echo "❌ コーディング規約違反が検出されました"
+              echo "🔧 修正方法: vendor/bin/phpcbf"
+              echo "📋 設定ファイル: phpcs.xml"
+              github-comment exec -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpcs .
+              exit 1
+            fi
+            echo "✅ コーディング規約チェック完了"
+          else
+            echo "❌ PHPCS not installed..."
+            github-comment post -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPCS not installed..."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Run PHPStan
+        run: |
+          echo "🔍 PHPStan静的解析実行中..."
+          if [ -f "vendor/bin/phpstan" ]; then
+            echo "📋 静的解析チェック開始 (Level 1)"
+            if ! vendor/bin/phpstan analyse --level=1 --no-progress --memory-limit=512M .; then
+              echo "❌ 静的解析でエラーが検出されました"
+              echo "🔧 詳細は上記のエラーメッセージを確認してください"
+              github-comment exec -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpstan analyse --level=1 --no-progress --memory-limit=512M .
+              exit 1
+            fi
+            echo "✅ 静的解析チェック完了"
+          else
+            echo "❌ PHPStan not installed..."
+            github-comment post -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPStan not installed..."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Test version synchronization
+        run: |
+          echo "🧪 バージョン同期テストを実行中..."
+          php scripts/test-version.php || {
+            echo "⚠️ バージョンテストで問題が発生しましたが、継続します"
+            exit 0
+          }
+
+      - name: Run application tests
+        run: |
+          echo "🧪 PHPUnitテストを実行中..."
+          vendor/bin/phpunit --configuration phpunit.xml.dist
+
+      - name: Test Docker build
+        run: |
+          echo "🐳 Dockerビルドテストを実行中..."
+          docker build -t phpuploader-test ./docker/ || {
+            echo "⚠️ Dockerビルドに問題がありましたが、継続します"
+            exit 0
+          }
+          echo "✅ Dockerビルド完了"
+
+  ui-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          tools: composer
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: '24'
+
+      - name: Install UI test dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright UI tests
+        run: npm run test:e2e

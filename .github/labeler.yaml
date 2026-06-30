@@ -1,0 +1,62 @@
+# 設定ファイル関連
+"area/config":
+  - changed-files:
+    - any-glob-to-any-file:
+      - config/**/*
+      - "config.php.example"
+
+# API関連
+"area/api":
+  - changed-files:
+    - any-glob-to-any-file:
+      - app/api/**/*
+
+# UI/フロントエンド関連
+"area/frontend":
+  - changed-files:
+    - any-glob-to-any-file:
+      - app/views/**/*
+      - asset/**/*
+
+# データベース関連
+"area/database":
+  - changed-files:
+    - any-glob-to-any-file:
+      - app/models/**/*
+      - db/**/*
+
+# Docker関連
+"area/docker":
+  - changed-files:
+    - any-glob-to-any-file:
+      - docker/**/*
+      - docker-compose.yaml
+      - Dockerfile
+
+# ドキュメント関連
+"area/documentation":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "*.md"
+      - docs/**/*
+
+# CI/CD関連
+"area/ci":
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/**/*
+
+# セキュリティ関連
+"area/security":
+  - changed-files:
+    - any-glob-to-any-file:
+      - config/**/*
+      - app/api/verify*
+
+# リリース関連
+"area/release":
+  - changed-files:
+    - any-glob-to-any-file:
+      - scripts/release.*
+      - composer.json
+      - CHANGELOG.md

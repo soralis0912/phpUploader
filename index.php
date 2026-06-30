@@ -1,52 +1,135 @@
 <?php
 
-  //簡易フレームワーク
+/**
+ * PHP Uploader Ver.2.0 - メインエントリーポイント
+ *
+ * 簡易フレームワーク with モダンPHP対応
+ */
 
-  // エラーを画面に表示(1を0にすると画面上にはエラーは出ない)
-  ini_set('display_errors',0);
+declare(strict_types=1);
 
-  if($_GET['page'] !== null){
-    $call = $_GET['page'];
-  }else{
-    $call = 'index';
-  }
+// エラー表示設定（本番環境用）
+ini_set('display_errors', '0'); // 本番環境では 0 に設定
+error_reporting(E_ALL);
 
-  //configをインクルード
-  include('./config/config.php');
-  $config = new config();
-  $ret = $config->index();
-  //配列キーが設定されている配列なら展開
-  if (!is_null($ret)) {
-    if(is_array($ret)){
-      extract($ret);
+// セッション開始
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+try {
+    // 設定とユーティリティの読み込み（絶対パスで修正）
+    $baseDir = dirname(__FILE__); // アプリケーションルートディレクトリ
+    require_once $baseDir . '/src/Core/ConfigLoader.php';
+    \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
+    require_once $baseDir . '/src/Core/Logger.php';
+    require_once $baseDir . '/src/Core/ResponseHandler.php';
+
+    $configInstance = new \PHPUploader\Config();
+    $config = $configInstance->index();
+
+    // 設定の検証
+    if (!$configInstance->validateSecurityConfig()) {
+        throw new Exception('設定ファイルのセキュリティ設定が不完全です。config.php を確認してください。');
     }
-  }
 
-  //初期設定・DBオープン
-  include('./app/models/init.php');
+    // ページパラメータの取得
+    $page = $_GET['page'] ?? 'index';
+    $page = preg_replace('/[^a-zA-Z0-9_]/', '', $page); // セキュリティ: 英数字とアンダースコアのみ許可
 
-  //modelをインクルード
-  if (file_exists('./app/models/'.$call.'.php')) {
+    // アプリケーション初期化
+    require_once $baseDir . '/app/models/init.php';
 
-    include('./app/models/'.$call.'.php');
-    //$call名のクラスをインスタンス化
-    $class = new $call();
-    //modelのindexメソッドを呼ぶ仕様
-    $ret = $class->index();
-    //配列キーが設定されている配列なら展開
-    if (!is_null($ret)) {
-      if(is_array($ret)){
-        extract($ret);
-      }
+    $initInstance = new \PHPUploader\Model\Init($config);
+    $db = $initInstance -> initialize();
+
+    // ログ機能の初期化
+    $logger = new \PHPUploader\Core\Logger(
+        $config['logDirectoryPath'],
+        $config['logLevel'],
+        $db
+    );
+
+    // レスポンスハンドラーの初期化
+    $responseHandler = new \PHPUploader\Core\ResponseHandler($logger);
+
+    // アクセスログの記録
+    $logger->access(null, 'page_view', 'success');
+
+    // モデルの読み込みと実行
+    $modelData = [];
+    $modelPath = "./app/models/{$page}.php";
+    $modelQueriedName = '\\PHPUploader\\Model\\' . ucfirst($page);
+
+    if (file_exists($modelPath)) {
+        require_once $modelPath;
+
+        if (class_exists($modelQueriedName)) {
+            $model = new $modelQueriedName();
+            if (method_exists($model, 'index')) {
+                $result = $model -> index();
+                if (is_array($result)) {
+                    $modelData = $result;
+                }
+            }
+        }
     }
-  }
 
-  //viewをインクルード
-  include('./app/views/header.php');
-  if (file_exists('./app/views/'.$call.'.php')) {
-    include('./app/views/'.$call.'.php');
-  } else {
-    $error = '404 - ページが見つかりません。';
-    include('./app/views/error.php');
-  }
-  include('./app/views/footer.php');
+    // ビューの描画
+    $viewData = array_merge($config, $modelData, [
+        'logger' => $logger,
+        'responseHandler' => $responseHandler,
+        'db' => $db,
+        'csrfToken' => \PHPUploader\Core\SecurityUtils::generateCSRFToken(),
+        'statusMessage' => $_GET['deleted'] ?? null
+    ]);
+
+    // 変数の展開
+    extract($viewData);
+
+    // ヘッダーの出力
+    require './app/views/header.php';
+
+    // メインコンテンツの出力
+    $viewPath = "./app/views/{$page}.php";
+    if (file_exists($viewPath)) {
+        require $viewPath;
+    } else {
+        $error = '404 - ページが見つかりません。';
+        require './app/views/error.php';
+    }
+
+    // フッターの出力
+    require './app/views/footer.php';
+} catch (Exception $e) {
+    // 緊急時のエラーハンドリング
+    $errorMessage = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+
+    // ログが利用可能な場合はエラーログに記録
+    if (isset($logger)) {
+        $logger->error('Application Error: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+    } else {
+        // ログが利用できない場合はファイルに直接記録
+        $logMessage = date('Y-m-d H:i:s') .
+            ' [CRITICAL] ' . $e->getMessage() .
+            ' in ' .
+            $e->getFile() .
+            ' on line ' .
+            $e->getLine() .
+            PHP_EOL;
+        @file_put_contents('./logs/critical.log', $logMessage, FILE_APPEND | LOCK_EX);
+    }
+
+    // シンプルなエラーページの表示
+    http_response_code(500);
+    echo '<!DOCTYPE html>';
+    echo '<html><head><meta charset="UTF-8"><title>エラー</title></head>';
+    echo '<body><h1>システムエラー</h1>';
+    echo '<p>' . $errorMessage . '</p>';
+    echo '<p><a href="./index.php">トップページに戻る</a></p>';
+    echo '</body></html>';
+}

@@ -1,67 +1,54 @@
-# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,php-cs-fixer,composer,fuelphp
-# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,php-cs-fixer,composer,fuelphp
+# IDE
+.vscode/
+.idea/
+.history/
+.ionide/
+*.vsix
 
-### Composer ###
+# Application data
+data/*
+db/*
+logs/*
+
+# Keep directory structure
+!data/.gitkeep
+!db/.gitkeep
+!logs/.gitkeep
+
+# Dependencies and tools
+vendor/
+node_modules/
 composer.phar
-/vendor/
+.php-cs-fixer.cache
+.php-cs-fixer.php
 
-# Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# composer.lock
-
-### FuelPHP ###
-# the composer package lock file and install directory
-# Commit your application's lock file http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# /composer.lock
+# FuelPHP
 /fuel/vendor
-
-# the fuelphp document
 /docs/
-
-# you may install these packages with `oil package`.
-# http://fuelphp.com/docs/packages/oil/package.html
-# /fuel/packages/auth/
-# /fuel/packages/email/
-# /fuel/packages/oil/
-# /fuel/packages/orm/
-# /fuel/packages/parser/
-
-# dynamically generated files
 /fuel/app/logs/*/*/*
 /fuel/app/cache/*/*
 /fuel/app/config/crypt.php
 
-### PHP-CS-Fixer ###
-# Covers PHP CS Fixer
-# Reference: https://cs.symfony.com/
+# Build artifacts
+*.zip
+*.tar.gz
+.phpunit.cache/
+playwright-report/
+test-results/
+.test-runtime/
 
-# Generated files
-.php-cs-fixer.cache
+# Environment
+.env
+config/config.php
 
-# Local config See: https://cs.symfony.com/doc/config.html
-.php-cs-fixer.php
+# OS files
+.DS_Store
+Thumbs.db
 
-### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+# Temporary files
+*.tmp
+*.temp
+*.php~
 
-# Local History for Visual Studio Code
-.history/
-
-# Built Visual Studio Code Extensions
-*.vsix
-
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
-
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,php-cs-fixer,composer,fuelphp
-.vscode/launch.json
-data/*
-db/*
+# Logs
+*.log

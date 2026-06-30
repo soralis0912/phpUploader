@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release # repo レベルの排他制御
+  cancel-in-progress: false # PR の更新があった場合は前のジョブをキャンセルしない
+
+permissions:
+  id-token: write
+  contents: write # Release ページの書き込みに必要
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.CLIENT_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.1'
+          extensions: pdo, sqlite3
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Create release archive
+        run: |
+          # 不要なファイルを除外してアーカイブ作成
+          zip -r phpUploader-${GITHUB_REF#refs/tags/}.zip . \
+            -x "*.git*" \
+            -x ".config/*" \
+            -x ".github/*" \
+            -x "node_modules/*" \
+            -x "image/*" \
+            -x "scripts/*" \
+            -x "tests/*" \
+            -x ".gitignore" \
+            -x ".markdownlint.json" \
+            -x "aqua.yaml" \
+            -x "aqua-checksums.json" \
+            -x "cspell.json" \
+            -x "github-comment.yaml" \
+            -x "phpcs.xml" \
+            -x "phpunit.xml" \
+            -x "phpstan.neon" \
+            -x "renovate.json" \
+            -x "*.md" \
+
+      - name: Create Release
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
+        with:
+          files: phpUploader-*.zip
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
