@@ -45,6 +45,7 @@ cp config/config.php.example config/config.php
 - `master`: 管理者用キー（DLキー・DELキーのマスターキー）
 - `key`: 暗号化用ハッシュ（ランダムな英数字）
 - `sessionSalt`: セッションソルト（ランダムな英数字）
+- `chunkSize`: 1チャンクあたりのアップロードサイズ（MB、既定値 50）
 
 ```php
 // 例：セキュリティのため必ず変更してください
@@ -88,6 +89,7 @@ cp config/config.php.example config/config.php
 ```
 
 ⑥ファイルがアップロードできるよう、PHPとapacheまたはnginxの設定を変更してください。
+チャンクアップロードを利用する場合、`upload_max_filesize` と `post_max_size` は `chunkSize` より大きい値にしてください。
 
 ## Quick Start (Docker)
 

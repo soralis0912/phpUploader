@@ -34,6 +34,7 @@
           </div>
           <p class="help-block">
             📊 最大<?php echo $maxFileSize; ?>MBまでアップロード可能<br>
+            🧩 1チャンク: <?php echo htmlspecialchars((string)($chunkSize ?? 50), ENT_QUOTES, 'UTF-8'); ?>MB<br>
             📎 対応拡張子: <?php echo implode(', ', $extension); ?>
           </p>
         </div>
@@ -139,4 +140,7 @@
       $data,
       JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
   ); ?>;
+  window.uploadConfig = {
+    chunkSize: <?php echo json_encode((float)($chunkSize ?? 50)); ?>
+  };
 </script>

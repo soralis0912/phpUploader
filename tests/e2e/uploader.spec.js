@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { expect, test } = require('@playwright/test');
 
 test.describe.configure({ mode: 'serial' });
@@ -68,5 +69,34 @@ test.describe('phpUploader UI', () => {
 
     await page.locator('#fileSearchInput').fill('missing-file');
     await expect(page.locator('#fileManagerContainer')).toContainText('検索結果が見つかりません');
+  });
+
+  test('uploads a file in chunks', async ({ page }) => {
+    const fixturePath = test.info().outputPath('chunked-upload.pdf');
+    fs.writeFileSync(fixturePath, Buffer.alloc(2 * 1024 * 1024 + 123, '%PDF-1.7\n'));
+
+    const uploadResponses = [];
+    page.on('response', (response) => {
+      if (
+        response.url().includes('/app/api/upload.php') &&
+        response.request().method() === 'POST'
+      ) {
+        uploadResponses.push(response);
+      }
+    });
+
+    await page.locator('#lefile').setInputFiles(fixturePath);
+    await expect(page.locator('#fileInput')).toHaveValue('chunked-upload.pdf');
+
+    await page.getByRole('button', { name: /アップロード/ }).click();
+
+    await expect(page.getByRole('link', { name: /chunked-upload\.pdf/ })).toBeVisible();
+    await expect.poll(() => uploadResponses.length).toBeGreaterThan(1);
+
+    const fileData = await page.evaluate(() => window.fileData);
+    expect(fileData).toContainEqual(expect.objectContaining({
+      origin_file_name: 'chunked-upload.pdf',
+      size: 2 * 1024 * 1024 + 123
+    }));
   });
 });

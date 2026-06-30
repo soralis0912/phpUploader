@@ -19,6 +19,7 @@ config = config
   .replace("'CHANGE_THIS_MASTER_KEY'", "'test-master-key'")
   .replace("'CHANGE_THIS_ENCRYPTION_KEY'", "'test-encryption-key'")
   .replace("'CHANGE_THIS_sessionSalt'", "'test-session-salt'")
+  .replace("'chunkSize' => 50", "'chunkSize' => 1")
   .replace("__DIR__ . '/../composer.json'", "__DIR__ . '/../../composer.json'");
 
 fs.writeFileSync(configPath, config);

@@ -122,33 +122,130 @@ function file_upload()
     return;
   }
 
+  var fileInput = $('#lefile').get(0);
+  var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+  if (!file) {
+    showError('ファイルを選択してください。');
+    return;
+  }
+
   $('#errorContainer').fadeOut();
   $('#uploadContainer').fadeIn();
-   // フォームデータを取得
-  var formdata = new FormData($('#upload').get(0));
+  updateProgressBar(0);
 
-  // POSTでアップロード
-  $.ajax({
-    url  : './app/api/upload.php',
-    type : 'POST',
-    data : formdata,
-    cache       : false,
-    contentType : false,
-    processData : false,
-    dataType    : 'json',
-    async: true,
-    xhr : function(){
-      var XHR = $.ajaxSettings.xhr();
-      if(XHR.upload){
-        XHR.upload.addEventListener('progress',function(e){
-          var progre = parseInt(e.loaded/e.total*100);
-          updateProgressBar(progre);
-        }, false);
+  function getChunkSizeBytes() {
+    var chunkSizeMb = 50;
+    if (window.uploadConfig && Number(window.uploadConfig.chunkSize) > 0) {
+      chunkSizeMb = Number(window.uploadConfig.chunkSize);
+    }
+
+    return Math.round(chunkSizeMb * 1024 * 1024);
+  }
+
+  function buildUploadId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID().replace(/-/g, '');
+    }
+
+    return String(Date.now()) + String(Math.random()).replace(/[^0-9]/g, '');
+  }
+
+  function appendCommonFields(formdata) {
+    formdata.append('csrf_token', getCSRFToken());
+    formdata.append('comment', $('[name=comment]').val() || '');
+    formdata.append('dlkey', $('[name=dlkey]').val() || '');
+    formdata.append('delkey', $('[name=delkey]').val() || '');
+  }
+
+  function createUploadRequest(formdata, progressCallback) {
+    return $.ajax({
+      url  : './app/api/upload.php',
+      type : 'POST',
+      data : formdata,
+      cache       : false,
+      contentType : false,
+      processData : false,
+      dataType    : 'json',
+      async: true,
+      xhr : function(){
+        var XHR = $.ajaxSettings.xhr();
+        if(XHR.upload){
+          XHR.upload.addEventListener('progress', progressCallback, false);
+        }
+        return XHR;
+      },
+    });
+  }
+
+  function uploadStandardFile() {
+    var formdata = new FormData($('#upload').get(0));
+
+    return createUploadRequest(formdata, function(e){
+      if (!e.lengthComputable) {
+        return;
       }
-      return XHR;
-    },
-  })
-  .done(function(data, textStatus, jqXHR){
+
+      var progress = parseInt(e.loaded / e.total * 100);
+      updateProgressBar(progress);
+    });
+  }
+
+  function uploadChunkedFile(chunkSize) {
+    var deferred = $.Deferred();
+    var uploadId = buildUploadId();
+    var totalChunks = Math.ceil(file.size / chunkSize);
+
+    function sendChunk(chunkIndex) {
+      var start = chunkIndex * chunkSize;
+      var end = Math.min(start + chunkSize, file.size);
+      var chunk = file.slice(start, end);
+      var formdata = new FormData();
+
+      appendCommonFields(formdata);
+      formdata.append('file', chunk, file.name);
+      formdata.append('chunk_upload', '1');
+      formdata.append('upload_id', uploadId);
+      formdata.append('chunk_index', String(chunkIndex));
+      formdata.append('total_chunks', String(totalChunks));
+      formdata.append('total_size', String(file.size));
+      formdata.append('file_name', file.name);
+
+      createUploadRequest(formdata, function(e){
+        if (!e.lengthComputable) {
+          return;
+        }
+
+        var uploadedBytes = Math.min(start + e.loaded, file.size);
+        var progress = parseInt(uploadedBytes / file.size * 100);
+        updateProgressBar(progress);
+      })
+      .done(function(data){
+        if (data.status === 'error') {
+          deferred.resolve(data);
+          return;
+        }
+
+        if (chunkIndex + 1 >= totalChunks) {
+          updateProgressBar(100);
+          deferred.resolve(data);
+          return;
+        }
+
+        sendChunk(chunkIndex + 1);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown){
+        deferred.reject(jqXHR, textStatus, errorThrown);
+      });
+    }
+
+    sendChunk(0);
+    return deferred.promise();
+  }
+
+  var chunkSize = getChunkSizeBytes();
+  var uploadRequest = file.size > chunkSize ? uploadChunkedFile(chunkSize) : uploadStandardFile();
+
+  uploadRequest.done(function(data, textStatus, jqXHR){
     if (data.status === 'success') {
       // 成功時はページをリロード（新ファイルマネージャーはリロード後に更新される）
       showSuccess(data.message || 'ファイルのアップロードが完了しました。');

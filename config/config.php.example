@@ -30,6 +30,7 @@ class Config
             'saveMaxFiles' => 500,
             'maxComment' => 80,
             'maxFileSize' => 95,
+            'chunkSize' => 50,
             'extension' => [
                 'zip',
                 'rar',
