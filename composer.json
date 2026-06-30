@@ -24,6 +24,7 @@
         "ext-json": "*"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
         "phpunit/phpunit": "^10.5",
         "squizlabs/php_codesniffer": "^4.0",
         "phpstan/phpstan": "^2.0"
@@ -42,6 +43,8 @@
     },
     "scripts": {
         "check-syntax": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
+        "format": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+        "format:check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
         "test": "phpunit --configuration phpunit.xml.dist",
         "test:unit": "phpunit --configuration phpunit.xml.dist --testsuite Unit",
         "test:integration": "phpunit --configuration phpunit.xml.dist --testsuite Integration",

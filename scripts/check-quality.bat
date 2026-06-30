@@ -28,23 +28,29 @@ echo 3. 依存関係インストール
 docker-compose exec php-cli composer install --dev
 if errorlevel 1 goto :error
 
-echo 4. PHP CodeSniffer実行
+echo 4. PHP CS Fixerチェック
+docker-compose exec php-cli composer format:check
+if errorlevel 1 (
+    echo ⚠️ フォーマット差分が見つかりました
+)
+
+echo 5. PHP CodeSniffer実行
 docker-compose exec php-cli vendor/bin/phpcs
 if errorlevel 1 (
     echo ⚠️ コーディング規約違反が見つかりました
 )
 
-echo 5. PHPStan実行
+echo 6. PHPStan実行
 docker-compose exec php-cli vendor/bin/phpstan analyse
 if errorlevel 1 (
     echo ⚠️ 静的解析で問題が見つかりました
 )
 
-echo 6. バージョン同期テスト
+echo 7. バージョン同期テスト
 docker-compose exec php-cli php scripts/test-version.php
 if errorlevel 1 goto :error
 
-echo 7. 設定ファイルテスト
+echo 8. 設定ファイルテスト
 docker-compose exec php-cli cp config/config.php.example config/config.php
 docker-compose exec php-cli php -l config/config.php
 if errorlevel 1 goto :error

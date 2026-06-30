@@ -5,7 +5,8 @@
         "vscode": {
             "extensions": [
                 "junstyle.php-cs-fixer",
-                "richie5um2.vscode-sort-json"
+                "richie5um2.vscode-sort-json",
+                "bmewburn.vscode-intelephense-client"
             ],
             "settings": {
                 "php-cs-fixer.executablePath": "vendor/bin/php-cs-fixer"
@@ -13,9 +14,17 @@
         }
     },
     "dockerComposeFile": "docker-compose.yml",
+    "forwardPorts": [
+        8080
+    ],
     "name": "phpUploader",
     "postCreateCommand": "/bin/sh .devcontainer/postCreateCommand.sh",
     "remoteUser": "vscode",
+    "runServices": [
+        "php",
+        "nginx",
+        "dev"
+    ],
     "service": "dev",
     "shutdownAction": "stopCompose",
     "workspaceFolder": "/workspace"

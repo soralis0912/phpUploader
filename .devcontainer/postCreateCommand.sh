@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-composer require --dev friendsofphp/php-cs-fixer
+set -eu
+
+composer install
+npm ci

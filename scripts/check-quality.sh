@@ -26,31 +26,22 @@ docker-compose exec php-cli composer validate --no-check-publish
 echo -e "${YELLOW}3. 依存関係インストール${NC}"
 docker-compose exec php-cli composer install
 
-echo -e "${YELLOW}4. PHP CodeSniffer実行${NC}"
-if docker-compose exec php-cli test -f "vendor/bin/phpcs"; then
-    docker-compose exec php-cli vendor/bin/phpcs .
-else
-    echo -e "${RED}PHPCS not found, installing...${NC}"
-    docker-compose exec php-cli composer require --dev squizlabs/php_codesniffer
-    docker-compose exec php-cli vendor/bin/phpcs .
-fi
+echo -e "${YELLOW}4. PHP CS Fixerチェック${NC}"
+docker-compose exec php-cli composer format:check
 
-echo -e "${YELLOW}5. PHPStan実行${NC}"
-if docker-compose exec php-cli test -f "vendor/bin/phpstan"; then
-    docker-compose exec php-cli vendor/bin/phpstan analyse --memory-limit=512M
-else
-    echo -e "${RED}PHPStan not found, installing...${NC}"
-    docker-compose exec php-cli composer require --dev phpstan/phpstan
-    docker-compose exec php-cli vendor/bin/phpstan analyse --memory-limit=512M
-fi
+echo -e "${YELLOW}5. PHP CodeSniffer実行${NC}"
+docker-compose exec php-cli vendor/bin/phpcs .
 
-echo -e "${YELLOW}6. PHPUnit実行${NC}"
+echo -e "${YELLOW}6. PHPStan実行${NC}"
+docker-compose exec php-cli vendor/bin/phpstan analyse --memory-limit=512M
+
+echo -e "${YELLOW}7. PHPUnit実行${NC}"
 docker-compose exec php-cli vendor/bin/phpunit --configuration phpunit.xml.dist
 
-echo -e "${YELLOW}7. バージョン同期テスト${NC}"
+echo -e "${YELLOW}8. バージョン同期テスト${NC}"
 docker-compose exec php-cli php scripts/test-version.php
 
-echo -e "${YELLOW}8. 設定ファイルテスト${NC}"
+echo -e "${YELLOW}9. 設定ファイルテスト${NC}"
 docker-compose exec php-cli php -l config/config.php.example
 if docker-compose exec php-cli test -f "config/config.php"; then
     docker-compose exec php-cli php -l config/config.php

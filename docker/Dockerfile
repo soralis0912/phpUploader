@@ -1,4 +1,5 @@
-FROM php:8.1-fpm
+ARG VARIANT=8.1-fpm
+FROM php:${VARIANT}
 
 WORKDIR /var/www/html
 
@@ -7,13 +8,9 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         curl \
         git \
-        libonig-dev \
-        libsqlite3-dev \
         nginx \
         unzip \
     ; \
-    docker-php-ext-install mbstring pdo_sqlite sqlite3; \
-    apt-get purge -y --auto-remove libonig-dev; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
 
