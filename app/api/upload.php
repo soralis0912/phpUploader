@@ -550,6 +550,19 @@ try {
         $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
     }
 
+    if (($_POST['chunk_upload'] ?? '') !== '1') {
+        $contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0;
+        $singleRequestLimit = getConfiguredChunkSizeBytes($config) + 1024 * 1024;
+        if ($contentLength > $singleRequestLimit) {
+            $responseHandler->error(
+                '大きいファイルはチャンクアップロードで送信してください。ページを再読み込みしてください。',
+                [],
+                400,
+                'CHUNK_UPLOAD_REQUIRED'
+            );
+        }
+    }
+
     if (($_POST['chunk_upload'] ?? '') === '1') {
         handleChunkedUpload($config, $db, $logger, $responseHandler);
     }

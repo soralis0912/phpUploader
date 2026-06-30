@@ -51,6 +51,10 @@
 
     <script src="./asset/js/modal.js"></script>
     <script src="./asset/js/file-manager.js"></script>
-    <script src="./asset/js/common.js"></script>
+    <?php
+    $commonJsPath = dirname(__DIR__, 2) . '/asset/js/common.js';
+    $commonJsVersion = file_exists($commonJsPath) ? (string)filemtime($commonJsPath) : ($version ?? 'dev');
+    ?>
+    <script src="./asset/js/common.js?v=<?php echo rawurlencode($commonJsVersion); ?>"></script>
   </body>
 </html>

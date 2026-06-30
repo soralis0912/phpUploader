@@ -190,7 +190,9 @@ function file_upload()
   }
 
   function uploadStandardFile() {
-    var formdata = new FormData($('#upload').get(0));
+    var formdata = new FormData();
+    appendCommonFields(formdata);
+    formdata.append('file', file, file.name);
 
     return createUploadRequest(formdata, function(e){
       if (!e.lengthComputable) {
@@ -208,7 +210,7 @@ function file_upload()
   function uploadChunkedFile(chunkSize) {
     var deferred = $.Deferred();
     var uploadId = buildUploadId();
-    var totalChunks = Math.ceil(file.size / chunkSize);
+    var totalChunks = Math.max(1, Math.ceil(file.size / chunkSize));
 
     function sendChunk(chunkIndex) {
       var start = chunkIndex * chunkSize;
@@ -261,7 +263,7 @@ function file_upload()
   }
 
   var chunkSize = getChunkSizeBytes();
-  var uploadRequest = file.size > chunkSize ? uploadChunkedFile(chunkSize) : uploadStandardFile();
+  var uploadRequest = chunkSize > 0 ? uploadChunkedFile(chunkSize) : uploadStandardFile();
 
   uploadRequest.done(function(data, textStatus, jqXHR){
     if (data.status === 'success') {

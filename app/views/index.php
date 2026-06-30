@@ -25,7 +25,7 @@
         <div class="form-section file-input-group">
           <input id="lefile" name="file" type="file" style="display:none">
           <div class="input-group">
-            <input type="text" id="fileInput" class="form-control" name="file" placeholder="ファイルを選択..." readonly>
+            <input type="text" id="fileInput" class="form-control" placeholder="ファイルを選択..." readonly>
             <span class="input-group-btn">
               <button type="button" class="btn btn-primary" onclick="$('input[id=lefile]').click();">
                 📁 ファイル選択
