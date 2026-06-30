@@ -102,6 +102,10 @@ function updateProgressBar(percent) {
   $('#progressText').text(percent + '%');
 }
 
+function updateProgressText(text) {
+  $('#progressText').text(text);
+}
+
 // 画面リサイズ時の対応
 $(window).resize(function() {
   // 新ファイルマネージャーのリサイズ対応
@@ -117,6 +121,10 @@ $(window).resize(function() {
 
 function file_upload()
 {
+  if (window.uploadInProgress) {
+    return;
+  }
+
   if($('#fileInput').val() == ''){
     showError('ファイルを選択してください。');
     return;
@@ -131,6 +139,10 @@ function file_upload()
 
   $('#errorContainer').fadeOut();
   $('#uploadContainer').fadeIn();
+  window.uploadInProgress = true;
+  var submitButton = $('.btn-submit');
+  var originalButtonHtml = submitButton.html();
+  submitButton.prop('disabled', true).html('⏳ アップロード中...');
   updateProgressBar(0);
 
   function getChunkSizeBytes() {
@@ -187,6 +199,9 @@ function file_upload()
 
       var progress = parseInt(e.loaded / e.total * 100);
       updateProgressBar(progress);
+      if (progress >= 100) {
+        updateProgressText('サーバー処理中...');
+      }
     });
   }
 
@@ -218,6 +233,9 @@ function file_upload()
         var uploadedBytes = Math.min(start + e.loaded, file.size);
         var progress = parseInt(uploadedBytes / file.size * 100);
         updateProgressBar(progress);
+        if (chunkIndex + 1 >= totalChunks && progress >= 100) {
+          updateProgressText('サーバー処理中...');
+        }
       })
       .done(function(data){
         if (data.status === 'error') {
@@ -324,6 +342,8 @@ function file_upload()
     showError(errorMsg);
   })
   .always(function( jqXHR, textStatus ) {
+    window.uploadInProgress = false;
+    submitButton.prop('disabled', false).html(originalButtonHtml);
     $('#uploadContainer').hide();
   });
 }
