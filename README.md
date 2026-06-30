@@ -115,7 +115,7 @@ docker-compose down web
 
 ## Container Image (GHCR)
 
-GitHub Container Registry へコンテナイメージを自動公開します。`master` / `main` への push で `latest` と branch tag、`v*` タグ push で semver tag が公開されます。
+GitHub Container Registry へ Nginx + PHP-FPM ベースのコンテナイメージを自動公開します。`master` / `main` への push で `latest` と branch tag、`v*` タグ push で semver tag が公開されます。
 
 - イメージ: `ghcr.io/shimosyan/phpuploader`
 - 例: `ghcr.io/shimosyan/phpuploader:latest`

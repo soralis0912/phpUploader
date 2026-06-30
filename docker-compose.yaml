@@ -3,7 +3,7 @@ services:
         build:
             context: "."
             dockerfile: "./docker/Dockerfile"
-        container_name: "php_apache"
+        container_name: "php_nginx"
         ports:
             - "80:80"
         volumes:
@@ -18,5 +18,10 @@ services:
         volumes:
             - ".:/var/www/html/"
         working_dir: /var/www/html
+        entrypoint:
+            - "docker-php-entrypoint"
+        command:
+            - "sleep"
+            - "infinity"
         profiles:
             - tools
