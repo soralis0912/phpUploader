@@ -16,6 +16,8 @@ permissions:
 jobs:
   check-documentation:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
 
     steps:
       - name: Checkout code
@@ -26,12 +28,14 @@ jobs:
           aqua_version: v2.60.1
 
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
-      - run: github-comment exec -- github-comment hide
+      - if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
+        run: github-comment exec -- github-comment hide
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
@@ -44,6 +48,12 @@ jobs:
         run: npm install -g markdownlint-cli2
 
       - name: Lint Markdown Files
-        run: github-comment exec -k common-error -var env:Staging -var title:"Check Markdown Failed" -- markdownlint-cli2 "**/*.md" --config ".markdownlint.json"
+        run: |
+          if [ -n "${APP_TOKEN}" ]; then
+            github-comment exec -k common-error -var env:Staging -var title:"Check Markdown Failed" -- markdownlint-cli2 "**/*.md" --config ".markdownlint.json"
+          else
+            markdownlint-cli2 "**/*.md" --config ".markdownlint.json"
+          fi
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

@@ -27,11 +27,14 @@ permissions:
 jobs:
   get-renovate-prs:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has-prs: ${{ steps.set-matrix.outputs.has-prs }}
     steps:
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
@@ -40,7 +43,7 @@ jobs:
       - name: Get Renovate PRs
         id: get-prs
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           if [ -n "${{ github.event.inputs.pr_numbers }}" ]; then
             # 手動実行時に特定のPR番号が指定された場合
@@ -76,12 +79,15 @@ jobs:
     needs: get-renovate-prs
     if: needs.get-renovate-prs.outputs.has-prs == 'true'
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
     strategy:
       matrix: ${{ fromJson(needs.get-renovate-prs.outputs.matrix) }}
       fail-fast: false
       max-parallel: 10  # 同時実行数を制限
     steps:
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
@@ -90,7 +96,7 @@ jobs:
       - name: Check if PR needs rebase
         id: check-pr
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           # PRの状態を確認
           pr_info=$(gh pr view ${{ matrix.pr }} \
@@ -110,7 +116,7 @@ jobs:
           steps.check-pr.outputs.state == 'OPEN' &&
           steps.check-pr.outputs.has_rebase_label == 'false'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           echo "Adding rebase label to PR #${{ matrix.pr }}"
           gh pr edit ${{ matrix.pr }} \

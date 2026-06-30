@@ -19,34 +19,46 @@ permissions:
 jobs:
   label:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - name: Auto Label PR
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213 # v6.1.0
         with:
           repo-token: ${{ steps.app-token.outputs.token }}
           configuration-path: .github/labeler.yaml
 
+      - name: Skip auto label when GitHub App credentials are unavailable
+        if: env.HAS_GITHUB_APP_CREDENTIALS != 'true'
+        run: echo "Skipping labeler because GitHub App credentials are unavailable in this workflow context."
+
   size-label:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
 
     steps:
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - name: Add size labels
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: codelytv/pr-size-labeler@095a41fca88b8764fd9e008ad269bcdb82bb38b9 # v1.10.4
         with:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -59,3 +71,7 @@ jobs:
           l_label: 'size/L'
           l_max_size: 1000
           xl_label: 'size/XL'
+
+      - name: Skip size label when GitHub App credentials are unavailable
+        if: env.HAS_GITHUB_APP_CREDENTIALS != 'true'
+        run: echo "Skipping size labeler because GitHub App credentials are unavailable in this workflow context."

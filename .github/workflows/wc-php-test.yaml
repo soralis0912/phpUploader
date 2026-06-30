@@ -17,6 +17,8 @@ permissions:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
 
     strategy:
       fail-fast: false
@@ -35,6 +37,7 @@ jobs:
           aqua_version: v2.60.1
 
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
@@ -60,24 +63,31 @@ jobs:
           # 機密ファイルがコミットされていないかチェック
           if [ -f "config/config.php" ]; then
             echo "Error: config.php should not be committed"
-            github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: config.php should not be committed"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: config.php should not be committed"
+            fi
             exit 1
           fi
 
           # .envファイルのチェック
           if [ -f ".env" ]; then
             echo "Error: .env should not be committed"
-            github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: .env should not be committed"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check Sensitive Files Exists" -var body:"Error: .env should not be committed"
+            fi
             exit 1
           fi
 
           echo "✅ No sensitive files found"
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
 
   lint-and-test:
     runs-on: ubuntu-latest
+    env:
+      HAS_GITHUB_APP_CREDENTIALS: ${{ secrets.CLIENT_ID != '' && secrets.PRIVATE_KEY != '' }}
 
     strategy:
       fail-fast: false
@@ -96,6 +106,7 @@ jobs:
           aqua_version: v2.60.1
 
       - id: app-token
+        if: env.HAS_GITHUB_APP_CREDENTIALS == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CLIENT_ID }}
@@ -122,7 +133,9 @@ jobs:
           if ! php -r "json_decode(file_get_contents('composer.json'), true); if (json_last_error() !== JSON_ERROR_NONE) exit(1);"; then
             echo "❌ composer.json contains invalid JSON"
             echo "🔧 composer.jsonの構文を確認してください"
-            github-comment post -k common-error -var title:"composer.json contains invalid JSON (PHP: ${{ matrix.php-version }})" -var body:"composer.jsonの構文を確認してください"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"composer.json contains invalid JSON (PHP: ${{ matrix.php-version }})" -var body:"composer.jsonの構文を確認してください"
+            fi
             exit 1
           fi
 
@@ -134,11 +147,14 @@ jobs:
             composer validate --verbose
             echo "📋 composer.json の内容確認:"
             cat composer.json
-            github-comment exec -k common-error -var title:"Check Validation composer.json Failed (PHP: ${{ matrix.php-version }})" -- composer validate --verbose
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment exec -k common-error -var title:"Check Validation composer.json Failed (PHP: ${{ matrix.php-version }})" -- composer validate --verbose
+            fi
             exit 1
           fi
           echo "✅ composer.json validation passed"
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Cache Composer packages
@@ -165,7 +181,9 @@ jobs:
           # config.php.exampleの存在確認
           if [ ! -f config/config.php.example ]; then
             echo "❌ config/config.php.example が見つかりません"
-            github-comment post -k common-error -var title:"'config/config.php.example' is not found (PHP: ${{ matrix.php-version }})" -var body:"'config/config.php.example' が見つかりません"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"'config/config.php.example' is not found (PHP: ${{ matrix.php-version }})" -var body:"'config/config.php.example' が見つかりません"
+            fi
             exit 1
           fi
 
@@ -179,11 +197,14 @@ jobs:
           echo "📄 config.php構文チェック中..."
           if ! php -l config/config.php; then
             echo "❌ config.phpに構文エラーがあります"
-            github-comment post -k common-error -var title:"Check 'config.php' Failed (PHP: ${{ matrix.php-version }})" -var body:"'config.php' に構文エラーがあります"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check 'config.php' Failed (PHP: ${{ matrix.php-version }})" -var body:"'config.php' に構文エラーがあります"
+            fi
             exit 1
           fi
           echo "✅ 設定ファイルセットアップ完了"
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Check PHP syntax
@@ -204,12 +225,15 @@ jobs:
           if [ $SYNTAX_ERRORS_COUNT -gt 0 ]; then
             echo "❌ $SYNTAX_ERRORS_COUNT 個のPHPファイルに構文エラーがあります"
             SYNTAX_LOGS="$SYNTAX_LOGS\n❌ $SYNTAX_ERRORS_COUNT 個のPHPファイルに構文エラーがあります"
-            github-comment post -k common-error -var title:"Check PHP Syntax Failed (PHP: ${{ matrix.php-version }})" -var body:"$SYNTAX_LOGS"
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check PHP Syntax Failed (PHP: ${{ matrix.php-version }})" -var body:"$SYNTAX_LOGS"
+            fi
 
             exit 1
           fi
           echo "✅ PHP構文チェック完了 - エラーなし"
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Run PHP CodeSniffer
@@ -222,16 +246,21 @@ jobs:
               echo "❌ コーディング規約違反が検出されました"
               echo "🔧 修正方法: vendor/bin/phpcbf"
               echo "📋 設定ファイル: phpcs.xml"
-              github-comment exec -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpcs .
+              if [ -n "${APP_TOKEN}" ]; then
+                github-comment exec -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpcs .
+              fi
               exit 1
             fi
             echo "✅ コーディング規約チェック完了"
           else
             echo "❌ PHPCS not installed..."
-            github-comment post -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPCS not installed..."
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check PHP CodeSniffer Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPCS not installed..."
+            fi
             exit 1
           fi
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Run PHPStan
@@ -242,16 +271,21 @@ jobs:
             if ! vendor/bin/phpstan analyse --level=1 --no-progress --memory-limit=512M .; then
               echo "❌ 静的解析でエラーが検出されました"
               echo "🔧 詳細は上記のエラーメッセージを確認してください"
-              github-comment exec -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpstan analyse --level=1 --no-progress --memory-limit=512M .
+              if [ -n "${APP_TOKEN}" ]; then
+                github-comment exec -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -- vendor/bin/phpstan analyse --level=1 --no-progress --memory-limit=512M .
+              fi
               exit 1
             fi
             echo "✅ 静的解析チェック完了"
           else
             echo "❌ PHPStan not installed..."
-            github-comment post -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPStan not installed..."
+            if [ -n "${APP_TOKEN}" ]; then
+              github-comment post -k common-error -var title:"Check PHPStan Failed (PHP: ${{ matrix.php-version }})" -var body:"PHPStan not installed..."
+            fi
             exit 1
           fi
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Test version synchronization
