@@ -2,4 +2,3 @@
 set -eu
 
 composer install
-npm ci
