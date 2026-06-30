@@ -1,33 +1,44 @@
-# PHP 8.1に固定（アプリケーションの安定版として固定）
 FROM php:8.1-apache
 
-# 作業ディレクトリを設定
 WORKDIR /var/www/html
 
-# パッケージリストの更新とクリーンアップの改善
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        git \
-        unzip \
         curl \
+        git \
+        libonig-dev \
+        libsqlite3-dev \
+        unzip \
     ; \
+    docker-php-ext-install mbstring pdo_sqlite sqlite3; \
+    apt-get purge -y --auto-remove libonig-dev; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
-# 必要な拡張機能が利用可能であることを確認
 RUN set -eux; \
     php -m | grep -q '^mbstring$'; \
     php -m | grep -q '^PDO$'; \
     php -m | grep -q '^pdo_sqlite$'; \
     php -m | grep -q '^sqlite3$'
 
-# Composerのインストール
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+RUN curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && chmod +x /usr/local/bin/composer
 
-# PHPの設定ファイルをコピー
-COPY ./php/php.ini /usr/local/etc/php/
+COPY docker/php.ini /usr/local/etc/php/conf.d/phpuploader.ini
+COPY docker/entrypoint.sh /usr/local/bin/phpuploader-entrypoint
+COPY . /var/www/html
 
-# Apache設定の最適化
+RUN set -eux; \
+    chmod +x /usr/local/bin/phpuploader-entrypoint; \
+    mkdir -p /usr/local/share/phpUploader; \
+    cp /var/www/html/config/config.php.example /usr/local/share/phpUploader/config.php.example; \
+    mkdir -p /var/www/html/data /var/www/html/db /var/www/html/logs; \
+    chown -R www-data:www-data /var/www/html
+
 RUN a2enmod rewrite
+
+VOLUME ["/var/www/html/config", "/var/www/html/data", "/var/www/html/db", "/var/www/html/logs"]
+
+ENTRYPOINT ["phpuploader-entrypoint"]
+CMD ["apache2-foreground"]

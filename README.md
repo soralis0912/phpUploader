@@ -113,6 +113,33 @@ docker-compose up -d web
 docker-compose down web
 ```
 
+## Container Image (GHCR)
+
+GitHub Container Registry へコンテナイメージを自動公開します。`master` / `main` への push で `latest` と branch tag、`v*` タグ push で semver tag が公開されます。
+
+- イメージ: `ghcr.io/shimosyan/phpuploader`
+- 例: `ghcr.io/shimosyan/phpuploader:latest`
+- 例: `ghcr.io/shimosyan/phpuploader:2.0.2`
+
+他プロジェクトから利用する場合の `docker-compose.yml` 例:
+
+```yaml
+services:
+  uploader:
+    image: ghcr.io/shimosyan/phpuploader:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config:/var/www/html/config
+      - ./data:/var/www/html/data
+      - ./db:/var/www/html/db
+      - ./logs:/var/www/html/logs
+```
+
+初回起動時、`/var/www/html/config/config.php` が無ければイメージ内の `config.php.example` から自動生成されます。生成された `config/config.php` の `master`、`key`、`sessionSalt` は必ず変更してください。
+
+外部プロジェクトから認証なしで pull させる場合は、初回 publish 後に GHCR パッケージの visibility を `Public` に設定してください。
+
 ## Security Notes
 
 **設定ファイルのセキュリティ**:

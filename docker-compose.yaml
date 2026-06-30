@@ -1,6 +1,8 @@
 services:
     web:
-        build: "./docker"
+        build:
+            context: "."
+            dockerfile: "./docker/Dockerfile"
         container_name: "php_apache"
         ports:
             - "80:80"
@@ -9,7 +11,9 @@ services:
 
     # リリース管理用PHPコンテナ
     php-cli:
-        build: "./docker"
+        build:
+            context: "."
+            dockerfile: "./docker/Dockerfile"
         container_name: "php_cli"
         volumes:
             - ".:/var/www/html/"
