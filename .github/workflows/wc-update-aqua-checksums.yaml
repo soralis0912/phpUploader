@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
-      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: changes
         with:
           filters: |
@@ -45,7 +45,7 @@ jobs:
       - name: Install aqua
         uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
         with:
-          aqua_version: v2.60.1
+          aqua_version: v2.62.0
 
       - name: Fix aqua-checksums.json
         run: aqua upc -prune
