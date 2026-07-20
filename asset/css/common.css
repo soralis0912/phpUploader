@@ -54,7 +54,22 @@
 /* Ver.2.0 レスポンシブ対応強化 */
 @media (max-width: 768px) {
   .container {
-    padding: 8px;
+    padding: 8px 12px;
+    width: 100%;
+  }
+
+  .container > .row.bg-white {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .container > .row.bg-white.radius {
+    padding: 14px;
+  }
+
+  .container > .row.bg-white > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .radius {
@@ -166,6 +181,11 @@
   border-radius: 4px;
 }
 
+.upload-result__row a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .upload-result__note {
   margin: 8px 0 0;
   color: #6c757d;
@@ -195,6 +215,7 @@
 
 .download-file__body {
   min-width: 0;
+  flex: 1;
 }
 
 .download-file__name {
@@ -233,6 +254,8 @@
 .detail-link input[readonly] {
   background: #f8f9fa;
   cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .download-form {
@@ -243,4 +266,64 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px 12px;
+  }
+
+  .container > .row.bg-white.radius {
+    padding: 12px;
+  }
+
+  .file-input-group .input-group,
+  .detail-link .input-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .file-input-group .input-group .form-control,
+  .file-input-group .input-group-btn,
+  .file-input-group .input-group-btn .btn,
+  .detail-link .input-group .form-control,
+  .detail-link .input-group-btn,
+  .detail-link .input-group-btn .btn {
+    display: block;
+    width: 100%;
+  }
+
+  .file-input-group .input-group .form-control,
+  .detail-link .input-group .form-control {
+    border-radius: 4px;
+  }
+
+  .file-input-group .input-group-btn .btn,
+  .detail-link .input-group-btn .btn {
+    margin-top: 8px;
+    border-radius: 4px;
+  }
+
+  .upload-result__label {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .download-file {
+    gap: 10px;
+  }
+
+  .download-file__icon {
+    width: 32px;
+    font-size: 24px;
+  }
+
+  .download-file__name {
+    font-size: 18px;
+  }
+
+  .download-page__actions .btn {
+    width: 100%;
+  }
 }

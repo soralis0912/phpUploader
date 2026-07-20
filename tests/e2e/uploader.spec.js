@@ -24,6 +24,46 @@ test.describe('phpUploader UI', () => {
     await expect(page.locator('#errorContainer')).toContainText('ファイルを選択してください。');
   });
 
+  test('fits the mobile viewport without horizontal overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/');
+    await page.waitForFunction(() => window.jQuery && window.fileManagerInstance);
+
+    const metrics = await page.evaluate(() => {
+      const viewportWidth = window.innerWidth;
+      const selectors = [
+        '.container',
+        '.row.bg-white',
+        '.input-group',
+        '#fileManagerContainer',
+        '.file-manager'
+      ];
+
+      return {
+        viewportWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        elements: selectors.map((selector) => {
+          const element = document.querySelector(selector);
+          if (!element) {
+            return { selector, right: 0, width: 0 };
+          }
+
+          const rect = element.getBoundingClientRect();
+          return {
+            selector,
+            right: Math.ceil(rect.right),
+            width: Math.ceil(rect.width)
+          };
+        })
+      };
+    });
+
+    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
+    for (const element of metrics.elements) {
+      expect(element.right, element.selector).toBeLessThanOrEqual(metrics.viewportWidth);
+    }
+  });
+
   test('uploads a file and supports searching and list view', async ({ page }) => {
     const fixturePath = path.join(__dirname, 'fixtures', 'sample-upload.pdf');
 

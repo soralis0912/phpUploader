@@ -5,11 +5,11 @@
 /* より小さなスクリーン向け調整 */
 @media (max-width: 480px) {
   .container {
-    padding: 10px 5px;
+    padding: 10px 12px;
   }
   
   .form-section {
-    padding: 15px;
+    padding: 0;
   }
   
   .btn-submit {

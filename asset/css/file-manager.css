@@ -228,6 +228,8 @@
 .file-list-item__meta-value {
   color: #333;
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .file-list-item__actions {
@@ -333,6 +335,7 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
+  min-width: 0;
 }
 
 .file-card-v2__meta-icon {
@@ -350,6 +353,8 @@
 .file-card-v2__meta-value {
   color: #333;
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .file-card-v2__actions {
@@ -372,6 +377,9 @@
   font-weight: 500;
   transition: all 0.2s ease;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-card-v2__btn:hover {
@@ -547,6 +555,7 @@
   }
   
   .file-search__input {
+    min-width: 0;
     max-width: none;
   }
   
@@ -587,8 +596,22 @@
 }
 
 @media (max-width: 480px) {
+  .file-manager__title {
+    font-size: 20px;
+  }
+
+  .file-card-v2__header,
+  .file-card-v2__body {
+    padding: 12px;
+  }
+
   .file-card-v2__actions {
     flex-direction: column;
+  }
+
+  .file-card-v2__btn {
+    width: 100%;
+    min-height: 40px;
   }
   
   .file-pagination__nav {
