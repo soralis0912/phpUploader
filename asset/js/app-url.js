@@ -8,5 +8,5 @@ function appUrl(path) {
 }
 
 function buildDownloadPageUrl(id) {
-  return appUrl('show.php?id=' + encodeURIComponent(id));
+  return appUrl('show/' + encodeURIComponent(id));
 }

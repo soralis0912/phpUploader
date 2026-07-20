@@ -49,6 +49,28 @@ class FileRepository
         return is_array($file) ? $file : null;
     }
 
+    public function findDetailById(int $fileId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT ' . $this->publicColumnsSql() . ',
+                CASE WHEN dl_key_hash IS NOT NULL AND dl_key_hash <> \'\' THEN 1 ELSE 0 END AS has_download_key,
+                CASE WHEN del_key_hash IS NOT NULL AND del_key_hash <> \'\' THEN 1 ELSE 0 END AS has_delete_key
+             FROM uploaded
+             WHERE id = :id'
+        );
+        $stmt->execute(['id' => $fileId]);
+        $file = $stmt->fetch();
+
+        if (!is_array($file)) {
+            return null;
+        }
+
+        $file['has_download_key'] = (bool)$file['has_download_key'];
+        $file['has_delete_key'] = (bool)$file['has_delete_key'];
+
+        return $file;
+    }
+
     private function publicColumnsSql(): string
     {
         return implode(', ', self::PUBLIC_FILE_COLUMNS);

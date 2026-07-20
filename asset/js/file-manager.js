@@ -282,14 +282,6 @@ class FileManager {
           >
             🔎
           </a>
-          <a 
-            href="javascript:void(0);" 
-            class="file-list-item__btn file-list-item__btn--delete"
-            onclick="del_button(${file.id});"
-            title="削除"
-          >
-            🗑️
-          </a>
         </div>
       </div>
     `;
@@ -356,13 +348,6 @@ class FileManager {
               class="file-card-v2__btn"
             >
               🔎 詳細
-            </a>
-            <a 
-              href="javascript:void(0);" 
-              class="file-card-v2__btn file-card-v2__btn--delete"
-              onclick="del_button(${file.id});"
-            >
-              🗑️ 削除
             </a>
           </div>
         </div>
@@ -540,7 +525,7 @@ class FileManager {
       return window.buildDownloadPageUrl(id);
     }
 
-    return `./show.php?id=${encodeURIComponent(id)}`;
+    return `./show/${encodeURIComponent(id)}`;
   }
   
   getFileIcon(extension) {

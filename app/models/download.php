@@ -27,7 +27,7 @@ class Download
         }
 
         return [
-            'downloadFile' => $repository->findPublicById($fileId),
+            'downloadFile' => $repository->findDetailById($fileId),
         ];
     }
 }

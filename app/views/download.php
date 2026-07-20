@@ -21,7 +21,8 @@ $file = $downloadFile ?? null;
         $fileSize = number_format(((int)$file['size']) / 1024 / 1024, 1);
         $downloadCount = (int)$file['count'];
         $uploadedAt = date('Y/m/d H:i', (int)$file['input_date']);
-        $detailUrl = $appBasePath . 'show.php?id=' . rawurlencode((string)$fileId);
+        $hasDownloadKey = (bool)($file['has_download_key'] ?? false);
+        $hasDeleteKey = (bool)($file['has_delete_key'] ?? false);
         ?>
         <div class="download-page">
           <p class="h2">ファイル詳細</p>
@@ -34,28 +35,10 @@ $file = $downloadFile ?? null;
                 <p class="download-file__comment"><?php echo $comment; ?></p>
               <?php endif; ?>
               <div class="download-file__meta">
-                <span>ID: #<?php echo $fileId; ?></span>
                 <span>サイズ: <?php echo $fileSize; ?>MB</span>
                 <span>日付: <?php echo htmlspecialchars($uploadedAt, ENT_QUOTES, 'UTF-8'); ?></span>
                 <span>DL: <?php echo $downloadCount; ?>回</span>
               </div>
-            </div>
-          </div>
-
-          <div class="detail-link">
-            <label for="detailUrlInput">このファイルのページ</label>
-            <div class="input-group">
-              <input
-                type="text"
-                class="form-control"
-                id="detailUrlInput"
-                value="<?php echo htmlspecialchars($detailUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                readonly>
-              <span class="input-group-btn">
-                <a class="btn btn-default" href="<?php echo htmlspecialchars($detailUrl, ENT_QUOTES, 'UTF-8'); ?>">
-                  開く
-                </a>
-              </span>
             </div>
           </div>
 
@@ -73,21 +56,38 @@ $file = $downloadFile ?? null;
               name="csrf_token"
               value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
 
-            <div class="form-group">
-              <label for="downloadKeyInput">ダウンロードキー</label>
-              <input
-                type="text"
-                class="form-control"
-                id="downloadKeyInput"
-                name="download_key"
-                placeholder="設定されている場合のみ入力">
-              <p class="help-block">キーなしのファイルは空白のままダウンロードできます。</p>
-            </div>
+            <?php if ($hasDownloadKey) : ?>
+              <div class="form-group">
+                <label for="downloadKeyInput">ダウンロードキー</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="downloadKeyInput"
+                  name="download_key"
+                  placeholder="ダウンロードキーを入力">
+              </div>
+            <?php endif; ?>
 
             <div class="download-page__actions">
               <button type="submit" class="btn btn-primary">⬇️ ダウンロード</button>
               <a class="btn btn-default" href="<?php echo $escapedAppBasePath; ?>">一覧へ戻る</a>
             </div>
+          </form>
+
+          <form class="delete-form" onsubmit="delete_page_submit(<?php echo $fileId; ?>); return false;">
+            <?php if ($hasDeleteKey) : ?>
+              <div class="form-group">
+                <label for="deleteKeyInput">削除キー</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="deleteKeyInput"
+                  name="delete_key"
+                  placeholder="削除キーを入力">
+              </div>
+            <?php endif; ?>
+
+            <button type="submit" class="btn btn-danger">🗑️ 削除</button>
           </form>
         </div>
       <?php endif; ?>

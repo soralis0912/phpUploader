@@ -10,9 +10,9 @@ const webServerCommand = process.env.PHPUPLOADER_E2E_USE_DOCKER === '1'
       `-p ${port}:${port}`,
       `-e PHPUPLOADER_CONFIG_PATH=${testConfigPath}`,
       'php-cli',
-      `php -S 0.0.0.0:${port} -t .`
+      `php -S 0.0.0.0:${port} -t . tests/e2e/router.php`
     ].join(' ')
-  : `php -S 127.0.0.1:${port} -t .`;
+  : `php -S 127.0.0.1:${port} -t . tests/e2e/router.php`;
 
 module.exports = defineConfig({
   testDir: './tests/e2e',

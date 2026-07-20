@@ -239,27 +239,15 @@
   font-size: 13px;
 }
 
-.detail-link {
-  max-width: 720px;
-  margin: 0 0 18px;
-}
-
-.detail-link label {
-  display: block;
-  margin-bottom: 6px;
-  color: #495057;
-  font-weight: 600;
-}
-
-.detail-link input[readonly] {
-  background: #f8f9fa;
-  cursor: text;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .download-form {
   max-width: 520px;
+}
+
+.delete-form {
+  max-width: 520px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e9ecef;
 }
 
 .download-page__actions {
