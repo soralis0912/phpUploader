@@ -16,6 +16,8 @@ if (empty($_GET['id'])) {
     }
 }
 
-$_GET['page'] = 'download';
+$baseDir = __DIR__;
 
-require __DIR__ . '/index.php';
+require_once $baseDir . '/app/bootstrap/render_page.php';
+
+render_phpuploader_page($baseDir, 'download', $baseDir . '/app/views/show/header.php');

@@ -15,6 +15,9 @@ test.describe('phpUploader UI', () => {
     await expect(page.getByText('ファイルを登録')).toBeVisible();
     await expect(page.locator('#fileManagerContainer')).toContainText('ファイル一覧');
     await expect(page.locator('#fileManagerContainer')).toContainText('アップロードされたファイルはありません');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'PHP Uploader');
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/image\/cover\.png$/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
   });
 
   test('shows a client-side error when no file is selected', async ({ page }) => {
@@ -121,6 +124,15 @@ test.describe('phpUploader UI', () => {
     await expect(page.locator('#downloadPage')).not.toContainText('ダウンロードキー');
     await expect(page.locator('#downloadPage')).toContainText('削除キー');
     await expect(page.locator('#downloadPage a[href*="download.php"]')).toHaveCount(0);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'sample-upload.pdf | PHP Uploader'
+    );
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      /PHP Uploaderで共有されたファイルです。 サイズ:/
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', /\/show\/\d+$/);
   });
 
   test('uploads a file in chunks', async ({ page }) => {

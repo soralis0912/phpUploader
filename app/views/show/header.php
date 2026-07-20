@@ -10,8 +10,32 @@
 
     $siteTitle = (string)($title ?? 'PHP Uploader');
     $ogTitle = $siteTitle;
-    $ogDescription = 'ブラウザからファイルをアップロードして共有できるPHP Uploaderです。';
+    $ogDescription = 'PHP Uploaderで共有されたファイルです。';
     $ogType = 'website';
+
+    if (!empty($downloadFile)) {
+        $downloadFileName = trim((string)($downloadFile['origin_file_name'] ?? ''));
+        $downloadFileComment = trim((string)($downloadFile['comment'] ?? ''));
+        $downloadFileSize = isset($downloadFile['size'])
+            ? number_format(((int)$downloadFile['size']) / 1024 / 1024, 1) . 'MB'
+            : '';
+
+        if ($downloadFileName !== '') {
+            $ogTitle = $downloadFileName . ' | ' . $siteTitle;
+        }
+
+        $ogDescription = $downloadFileComment !== ''
+            ? $downloadFileComment
+            : 'PHP Uploaderで共有されたファイルです。';
+
+        if ($downloadFileSize !== '') {
+            $ogDescription .= ' サイズ: ' . $downloadFileSize;
+        }
+    }
+
+    if (mb_strlen($ogDescription, 'UTF-8') > 160) {
+        $ogDescription = mb_substr($ogDescription, 0, 157, 'UTF-8') . '...';
+    }
 
     $host = preg_replace('/[^A-Za-z0-9.:\-\[\]]/', '', (string)($_SERVER['HTTP_HOST'] ?? ''));
     $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
