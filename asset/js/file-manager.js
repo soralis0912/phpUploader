@@ -233,6 +233,7 @@ class FileManager {
     });
     const fileExt = this.getFileExtension(file.origin_file_name);
     const fileIcon = this.getFileIcon(fileExt);
+    const detailPageUrl = this.getDownloadPageUrl(file.id);
 
     return `
       <div class="file-list-item" data-file-id="${file.id}">
@@ -242,9 +243,8 @@ class FileManager {
         <div class="file-list-item__main">
           <div class="file-list-item__info">
             <a 
-              href="javascript:void(0);" 
+              href="${detailPageUrl}" 
               class="file-list-item__filename"
-              onclick="dl_button(${file.id});"
               title="${this.escapeHtml(file.origin_file_name)}"
             >
               ${this.escapeHtml(file.origin_file_name)}
@@ -276,12 +276,11 @@ class FileManager {
         </div>
         <div class="file-list-item__actions">
           <a 
-            href="javascript:void(0);" 
+            href="${detailPageUrl}" 
             class="file-list-item__btn"
-            onclick="dl_button(${file.id});"
-            title="ダウンロード"
+            title="詳細"
           >
-            ⬇️
+            🔎
           </a>
           <a 
             href="javascript:void(0);" 
@@ -308,14 +307,14 @@ class FileManager {
     });
     const fileExt = this.getFileExtension(file.origin_file_name);
     const fileIcon = this.getFileIcon(fileExt);
+    const detailPageUrl = this.getDownloadPageUrl(file.id);
     
     return `
       <div class="file-card-v2" data-file-id="${file.id}">
         <div class="file-card-v2__header">
           <a 
-            href="javascript:void(0);" 
+            href="${detailPageUrl}" 
             class="file-card-v2__filename"
-            onclick="dl_button(${file.id});"
             title="${this.escapeHtml(file.origin_file_name)}"
           >
             ${fileIcon} ${this.escapeHtml(file.origin_file_name)}
@@ -353,11 +352,10 @@ class FileManager {
           
           <div class="file-card-v2__actions">
             <a 
-              href="javascript:void(0);" 
+              href="${detailPageUrl}" 
               class="file-card-v2__btn"
-              onclick="dl_button(${file.id});"
             >
-              ⬇️ ダウンロード
+              🔎 詳細
             </a>
             <a 
               href="javascript:void(0);" 
@@ -535,6 +533,14 @@ class FileManager {
   // ユーティリティメソッド
   getFileExtension(filename) {
     return filename.split('.').pop() || '';
+  }
+
+  getDownloadPageUrl(id) {
+    if (typeof window.buildDownloadPageUrl === 'function') {
+      return window.buildDownloadPageUrl(id);
+    }
+
+    return `./show.php?id=${encodeURIComponent(id)}`;
   }
   
   getFileIcon(extension) {

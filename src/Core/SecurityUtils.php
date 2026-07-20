@@ -225,6 +225,22 @@ class SecurityUtils
     }
 
     /**
+     * 短い認証キーを生成
+     */
+    public static function generateRandomKey(int $length = 4): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $maxIndex = strlen($characters) - 1;
+        $key = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $key .= $characters[random_int(0, $maxIndex)];
+        }
+
+        return $key;
+    }
+
+    /**
      * パスワードハッシュを生成（Argon2ID）
      */
     public static function hashPassword(string $password): string

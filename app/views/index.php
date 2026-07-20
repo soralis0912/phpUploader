@@ -58,9 +58,9 @@
             </div>
             <div class="col-sm-6">
               <div class="form-group">
-                <label for="delkeyInput">🗑️ 削除キー</label>
-                <input type="text" class="form-control" id="deleyInput" name="delkey" placeholder="任意のパスワード...">
-                <p class="help-block">空白で認証なし</p>
+                <label>🗑️ 削除キー</label>
+                <p class="form-control-static">アップロード後に4文字のキーを自動発行します。</p>
+                <p class="help-block">削除時に必要です。発行後に控えてください。</p>
               </div>
             </div>
           </div>

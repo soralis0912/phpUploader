@@ -56,7 +56,7 @@ function showError(message) {
 }
 
 // 成功表示ヘルパー関数
-function showSuccess(message) {
+function showSuccess(message, persist) {
   // 成功用のコンテナがない場合は作成
   if ($('#successContainer').length === 0) {
     var successHtml = '<div id="successContainer" class="panel panel-success" style="display: none;">' +
@@ -68,10 +68,12 @@ function showSuccess(message) {
   $('#successContainer > .panel-body').html(message);
   $('#successContainer').fadeIn();
 
-  // 3秒後に自動で非表示
-  setTimeout(function() {
-    $('#successContainer').fadeOut();
-  }, 3000);
+  if (!persist) {
+    // 3秒後に自動で非表示
+    setTimeout(function() {
+      $('#successContainer').fadeOut();
+    }, 3000);
+  }
 }
 
 // CSRFトークンを取得する関数
@@ -166,12 +168,11 @@ function file_upload()
     formdata.append('csrf_token', getCSRFToken());
     formdata.append('comment', $('[name=comment]').val() || '');
     formdata.append('dlkey', $('[name=dlkey]').val() || '');
-    formdata.append('delkey', $('[name=delkey]').val() || '');
   }
 
   function createUploadRequest(formdata, progressCallback) {
     return $.ajax({
-      url  : './app/api/upload.php',
+      url  : appUrl('app/api/upload.php'),
       type : 'POST',
       data : formdata,
       cache       : false,
@@ -267,11 +268,11 @@ function file_upload()
 
   uploadRequest.done(function(data, textStatus, jqXHR){
     if (data.status === 'success') {
-      // 成功時はページをリロード（新ファイルマネージャーはリロード後に更新される）
-      showSuccess(data.message || 'ファイルのアップロードが完了しました。');
-      setTimeout(function() {
-        location.reload();
-      }, 1500);
+      var uploadData = data.data || {};
+      addUploadedFileToList(uploadData);
+      showUploadComplete(uploadData);
+      $('#upload')[0].reset();
+      $('#fileInput').val('');
     } else if (data.status === 'error') {
       // Ver.2.0のエラーレスポンス形式に対応
       var errorMessage = '';
@@ -369,7 +370,7 @@ function dl_certificat(id, key){
   };
 
   $.ajax({
-    url  : './app/api/verifydownload.php',
+    url  : appUrl('app/api/verifydownload.php'),
     type : 'POST',
     data : postdata,
     dataType    : 'json'
@@ -377,10 +378,14 @@ function dl_certificat(id, key){
   .done(function(data, textStatus, jqXHR){
     if (data.status === 'success') {
       // Ver.2.0の成功レスポンス
-      location.href = './download.php?id=' + data.data.id + '&key=' + data.data.token;
+      location.href = appUrl('download.php?id=' + encodeURIComponent(data.data.id) + '&key=' + encodeURIComponent(data.data.token));
     } else if (data.status === 'error') {
       // Ver.2.0のエラーレスポンス
       if (data.error_code === 'AUTH_REQUIRED' || data.error_code === 'INVALID_KEY') {
+        if (document.getElementById('downloadPage')) {
+          showError(data.message || 'ダウンロードキーを入力してください。');
+          return;
+        }
         // 認証が必要
         var html = '<div class="form-group">' +
                   '<label for="confirmDlkeyInput">DLキーの入力</label>' +
@@ -405,7 +410,7 @@ function dl_certificat(id, key){
           openModal('okcansel', '認証が必要です', html, 'confirm_dl_button(' + id + ');');
           break;
         case 'ok':
-          location.href = './download.php?id=' + data.id + '&key=' + data.key;
+          location.href = appUrl('download.php?id=' + encodeURIComponent(data.id) + '&key=' + encodeURIComponent(data.key));
           break;
         default:
           showError('ダウンロードに失敗しました。');
@@ -459,7 +464,7 @@ function del_certificat(id, key){
   };
 
   $.ajax({
-    url  : './app/api/verifydelete.php',
+    url  : appUrl('app/api/verifydelete.php'),
     type : 'POST',
     data : postdata,
     dataType    : 'json'
@@ -467,7 +472,7 @@ function del_certificat(id, key){
   .done(function(data, textStatus, jqXHR){
     if (data.status === 'success') {
       // Ver.2.0の成功レスポンス
-      location.href = './delete.php?id=' + data.data.id + '&key=' + data.data.token;
+      location.href = appUrl('delete.php?id=' + encodeURIComponent(data.data.id) + '&key=' + encodeURIComponent(data.data.token));
     } else if (data.status === 'error') {
       // Ver.2.0のエラーレスポンス
       if (data.error_code === 'AUTH_REQUIRED' || data.error_code === 'INVALID_KEY') {
@@ -495,7 +500,7 @@ function del_certificat(id, key){
           openModal('okcansel', '認証が必要です', html, 'confirm_del_button(' + id + ');');
           break;
         case 'ok':
-          location.href = './delete.php?id=' + data.id + '&key=' + data.key;
+          location.href = appUrl('delete.php?id=' + encodeURIComponent(data.id) + '&key=' + encodeURIComponent(data.key));
           break;
         default:
           showError('削除に失敗しました。');

@@ -4,45 +4,22 @@ namespace PHPUploader\Model;
 
 class Index
 {
-    public const PUBLIC_FILE_COLUMNS = [
-        'id',
-        'origin_file_name',
-        'comment',
-        'size',
-        'count',
-        'input_date',
-    ];
+    public const PUBLIC_FILE_COLUMNS = FileRepository::PUBLIC_FILE_COLUMNS;
 
     public function index()
     {
         $config = new \PHPUploader\Config();
         $ret = $config->index();
-        //配列キーが設定されている配列なら展開
-        if (!is_null($ret)) {
-            if (is_array($ret)) {
-                extract($ret);
-            }
-        }
 
-        //データベースの作成・オープン
         try {
-            $db = new \PDO('sqlite:' . $ret['dbDirectoryPath'] . '/uploader.db');
+            $repository = FileRepository::createFromConfig($ret);
         } catch (\Exception $e) {
             $error = '500 - データベースの接続に失敗しました。';
             exit;
         }
 
-        // デフォルトのフェッチモードを連想配列形式に設定
-        // (毎回\PDO::FETCH_ASSOCを指定する必要が無くなる)
-        $db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-
-        // 選択 (公開してよいファイル一覧用の列だけを取得)
-        $stmt = $db->prepare('SELECT ' . implode(', ', self::PUBLIC_FILE_COLUMNS) . ' FROM uploaded');
-        $stmt->execute();
-        $r = $stmt->fetchAll();
-
         return [
-            'data' => $r,
+            'data' => $repository->fetchAllPublic(),
         ];
     }
 }

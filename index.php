@@ -39,6 +39,7 @@ try {
 
     // アプリケーション初期化
     require_once $baseDir . '/app/models/init.php';
+    require_once $baseDir . '/app/models/FileRepository.php';
 
     $initInstance = new \PHPUploader\Model\Init($config);
     $db = $initInstance -> initialize();

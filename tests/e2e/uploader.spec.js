@@ -42,8 +42,10 @@ test.describe('phpUploader UI', () => {
 
     const payload = await uploadResponse.json();
     expect(payload.status).toBe('success');
+    expect(payload.data.delete_key).toMatch(/^[A-Z0-9]{4}$/);
 
     await expect(page.locator('.file-card-v2__filename')).toContainText('sample-upload.pdf');
+    await expect(page.locator('#successContainer')).toContainText('削除キー');
 
     const fileData = await page.evaluate(() => window.fileData);
     expect(fileData).toHaveLength(1);
@@ -69,6 +71,12 @@ test.describe('phpUploader UI', () => {
 
     await page.locator('#fileSearchInput').fill('missing-file');
     await expect(page.locator('#fileManagerContainer')).toContainText('検索結果が見つかりません');
+
+    await page.goto(`/show.php?id=${payload.data.file_id}`);
+    await expect(page.locator('#downloadPage')).toContainText('ファイル詳細');
+    await expect(page.locator('#downloadPage')).toContainText('sample-upload.pdf');
+    await expect(page.locator('#downloadPage')).toContainText('このファイルのページ');
+    await expect(page.locator('#downloadPage a[href*="download.php"]')).toHaveCount(0);
   });
 
   test('uploads a file in chunks', async ({ page }) => {

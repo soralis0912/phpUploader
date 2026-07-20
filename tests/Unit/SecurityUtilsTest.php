@@ -35,6 +35,13 @@ final class SecurityUtilsTest extends TestCase
         self::assertFalse(SecurityUtils::validateCSRFToken(null));
     }
 
+    public function testGeneratesFourCharacterRandomKey(): void
+    {
+        $key = SecurityUtils::generateRandomKey(4);
+
+        self::assertMatchesRegularExpression('/^[A-Z0-9]{4}$/', $key);
+    }
+
     public function testSanitizesDangerousFilenameCharacters(): void
     {
         self::assertSame(

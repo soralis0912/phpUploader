@@ -87,7 +87,6 @@ function validateUploadData(
     string $fileName,
     string $comment,
     string $dlKey,
-    string $delKey,
     int $fileSize,
     array $config
 ): array {
@@ -109,10 +108,6 @@ function validateUploadData(
 
     if (!empty($dlKey) && mb_strlen($dlKey) < $config['security']['minKeyLength']) {
         $validationErrors[] = "ダウンロードキーは{$config['security']['minKeyLength']}文字以上で設定してください。";
-    }
-
-    if (!empty($delKey) && mb_strlen($delKey) < $config['security']['minKeyLength']) {
-        $validationErrors[] = "削除キーは{$config['security']['minKeyLength']}文字以上で設定してください。";
     }
 
     return $validationErrors;
@@ -213,7 +208,6 @@ function persistUploadedFile(
     string $fileName,
     string $comment,
     string $dlKey,
-    string $delKey,
     int $fileSize,
     bool $sourceIsUploadedFile,
     array $config,
@@ -221,7 +215,7 @@ function persistUploadedFile(
     \PHPUploader\Core\Logger $logger,
     \PHPUploader\Core\ResponseHandler $responseHandler
 ): array {
-    $validationErrors = validateUploadData($fileName, $comment, $dlKey, $delKey, $fileSize, $config);
+    $validationErrors = validateUploadData($fileName, $comment, $dlKey, $fileSize, $config);
     if (!empty($validationErrors)) {
         $responseHandler->error('バリデーションエラー', $validationErrors, 400);
     }
@@ -235,8 +229,8 @@ function persistUploadedFile(
 
     $dlKeyHash =
         (!empty($dlKey) && trim($dlKey) !== '') ? \PHPUploader\Core\SecurityUtils::hashPassword($dlKey) : null;
-    $delKeyHash =
-        (!empty($delKey) && trim($delKey) !== '') ? \PHPUploader\Core\SecurityUtils::hashPassword($delKey) : null;
+    $deleteKey = \PHPUploader\Core\SecurityUtils::generateRandomKey(4);
+    $delKeyHash = \PHPUploader\Core\SecurityUtils::hashPassword($deleteKey);
 
     $insertStmt = $db->prepare('
         INSERT INTO uploaded (
@@ -296,6 +290,10 @@ function persistUploadedFile(
         'file_id' => $fileId,
         'file_name' => $fileName,
         'file_size' => $fileSize,
+        'delete_key' => $deleteKey,
+        'input_date' => $insertData['input_date'],
+        'comment' => $comment,
+        'count' => 0,
     ];
 }
 
@@ -326,14 +324,12 @@ function handleStandardUpload(
     $fileName = htmlspecialchars($_FILES['file']['name'], ENT_QUOTES, 'UTF-8');
     $comment = htmlspecialchars($_POST['comment'] ?? '', ENT_QUOTES, 'UTF-8');
     $dlKey = $_POST['dlkey'] ?? '';
-    $delKey = $_POST['delkey'] ?? '';
 
     $data = persistUploadedFile(
         $_FILES['file']['tmp_name'],
         $fileName,
         $comment,
         $dlKey,
-        $delKey,
         $fileSize,
         true,
         $config,
@@ -402,9 +398,8 @@ function handleChunkedUpload(
 
     $comment = htmlspecialchars($_POST['comment'] ?? '', ENT_QUOTES, 'UTF-8');
     $dlKey = $_POST['dlkey'] ?? '';
-    $delKey = $_POST['delkey'] ?? '';
 
-    $validationErrors = validateUploadData($fileName, $comment, $dlKey, $delKey, $totalSize, $config);
+    $validationErrors = validateUploadData($fileName, $comment, $dlKey, $totalSize, $config);
     if (!empty($validationErrors)) {
         $responseHandler->error('バリデーションエラー', $validationErrors, 400);
     }
@@ -503,7 +498,6 @@ function handleChunkedUpload(
         $fileName,
         $comment,
         $dlKey,
-        $delKey,
         $totalSize,
         false,
         $config,

@@ -49,12 +49,19 @@
       integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
       crossorigin="anonymous"></script>
 
-    <script src="./asset/js/modal.js"></script>
-    <script src="./asset/js/file-manager.js"></script>
     <?php
-    $commonJsPath = dirname(__DIR__, 2) . '/asset/js/common.js';
-    $commonJsVersion = file_exists($commonJsPath) ? (string)filemtime($commonJsPath) : ($version ?? 'dev');
+    $assetJsVersions = [];
+    foreach (['app-url.js', 'file-manager.js', 'upload-result.js', 'download-page.js', 'common.js'] as $assetJsFile) {
+        $assetJsPath = dirname(__DIR__, 2) . '/asset/js/' . $assetJsFile;
+        $assetJsVersions[$assetJsFile] = file_exists($assetJsPath) ? (string)filemtime($assetJsPath) : ($version ?? 'dev');
+    }
+    $commonJsVersion = $assetJsVersions['common.js'];
     ?>
-    <script src="./asset/js/common.js?v=<?php echo rawurlencode($commonJsVersion); ?>"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/modal.js"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/app-url.js?v=<?php echo rawurlencode($assetJsVersions['app-url.js']); ?>"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/file-manager.js?v=<?php echo rawurlencode($assetJsVersions['file-manager.js']); ?>"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/upload-result.js?v=<?php echo rawurlencode($assetJsVersions['upload-result.js']); ?>"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/download-page.js?v=<?php echo rawurlencode($assetJsVersions['download-page.js']); ?>"></script>
+    <script src="<?php echo $escapedAppBasePath; ?>asset/js/common.js?v=<?php echo rawurlencode($commonJsVersion); ?>"></script>
   </body>
 </html>
