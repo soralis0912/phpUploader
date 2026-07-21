@@ -5,7 +5,7 @@ declare(strict_types=1);
 $baseDir = dirname(__DIR__, 2);
 $logger = null;
 
-require_once $baseDir . '/src/lib/page_helpers.php';
+require_once $baseDir . '/src/Lib/page_helpers.php';
 
 try {
     if (empty($_GET['id'])) {
@@ -33,7 +33,7 @@ try {
     $repository = new \PHPUploader\Model\FileRepository($db);
     $downloadFile = $fileId > 0 ? $repository->findDetailById($fileId) : null;
 
-    $appBasePath = phpuploader_app_base_path();
+    $appBasePath = phpuploader_app_base_path($config);
     $escapedAppBasePath = phpuploader_escape($appBasePath);
     $siteTitle = (string)($config['title'] ?? 'PHP Uploader');
     $ogTitle = $siteTitle;
@@ -61,8 +61,8 @@ try {
     }
 
     $ogDescription = phpuploader_trim_description($ogDescription);
-    $ogUrl = phpuploader_absolute_url(phpuploader_request_uri($appBasePath), $appBasePath);
-    $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath);
+    $ogUrl = phpuploader_absolute_url(phpuploader_request_uri($appBasePath), $appBasePath, $config);
+    $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath, $config);
     $escapeMeta = static fn (string $value): string => phpuploader_escape($value);
     $pageHeaderPath = $baseDir . '/src/View/show/header.php';
 

@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 function phpuploader_initialize_page(string $baseDir): array
 {
+    $context = phpuploader_initialize_app($baseDir);
+    $context['logger']->access(null, 'page_view', 'success');
+
+    return $context;
+}
+
+function phpuploader_initialize_app(string $baseDir): array
+{
     ini_set('display_errors', '0');
     error_reporting(E_ALL);
 
@@ -35,8 +43,6 @@ function phpuploader_initialize_page(string $baseDir): array
     );
     $responseHandler = new \PHPUploader\Core\ResponseHandler($logger);
 
-    $logger->access(null, 'page_view', 'success');
-
     return [
         'config' => $config,
         'db' => $db,
@@ -45,7 +51,18 @@ function phpuploader_initialize_page(string $baseDir): array
     ];
 }
 
-function phpuploader_app_base_path(): string
+function phpuploader_app_base_path(?array $config = null): string
+{
+    $configuredBaseUrl = phpuploader_configured_public_base_url($config ?? []);
+
+    if ($configuredBaseUrl !== null) {
+        return phpuploader_base_path_from_url($configuredBaseUrl);
+    }
+
+    return phpuploader_detect_app_base_path();
+}
+
+function phpuploader_detect_app_base_path(): string
 {
     $scriptDirectory = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
 
@@ -56,10 +73,33 @@ function phpuploader_app_base_path(): string
     return rtrim($scriptDirectory, '/') . '/';
 }
 
-function phpuploader_absolute_url(string $path, string $appBasePath): string
+function phpuploader_configured_public_base_url(array $config): ?string
+{
+    $configuredBaseUrl = trim((string)($config['publicBaseUrl'] ?? ''));
+
+    return $configuredBaseUrl === '' ? null : $configuredBaseUrl;
+}
+
+function phpuploader_base_path_from_url(string $baseUrl): string
+{
+    $path = parse_url($baseUrl, PHP_URL_PATH);
+
+    if (!is_string($path) || $path === '' || $path === '/') {
+        return '/';
+    }
+
+    return '/' . trim($path, '/') . '/';
+}
+
+function phpuploader_absolute_url(string $path, string $appBasePath, ?array $config = null): string
 {
     if (preg_match('#^https?://#i', $path) === 1) {
         return $path;
+    }
+
+    $configuredBaseUrl = phpuploader_configured_public_base_url($config ?? []);
+    if ($configuredBaseUrl !== null && preg_match('#^https?://#i', $configuredBaseUrl) === 1) {
+        return phpuploader_join_public_base_url($configuredBaseUrl, $path, $appBasePath);
     }
 
     $host = preg_replace('/[^A-Za-z0-9.:\-\[\]]/', '', (string)($_SERVER['HTTP_HOST'] ?? ''));
@@ -80,6 +120,29 @@ function phpuploader_absolute_url(string $path, string $appBasePath): string
     }
 
     return $scheme . '://' . $host . '/' . ltrim($urlPath, '/');
+}
+
+function phpuploader_join_public_base_url(string $baseUrl, string $path, string $appBasePath): string
+{
+    $baseUrl = rtrim($baseUrl, '/') . '/';
+    $relativePath = $path;
+
+    if ($relativePath === '') {
+        return $baseUrl;
+    }
+
+    if ($relativePath[0] === '/') {
+        $normalizedBasePath = phpuploader_base_path_from_url($baseUrl);
+        if ($normalizedBasePath !== '/' && str_starts_with($relativePath, $normalizedBasePath)) {
+            $relativePath = substr($relativePath, strlen($normalizedBasePath));
+        } elseif ($appBasePath !== '/' && str_starts_with($relativePath, $appBasePath)) {
+            $relativePath = substr($relativePath, strlen($appBasePath));
+        } else {
+            $relativePath = ltrim($relativePath, '/');
+        }
+    }
+
+    return $baseUrl . ltrim($relativePath, '/');
 }
 
 function phpuploader_request_uri(string $appBasePath): string

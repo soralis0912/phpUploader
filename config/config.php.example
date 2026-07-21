@@ -27,6 +27,9 @@ class Config
 
             // アプリケーション設定
             'title' => 'PHP Uploader',
+            // 公開設置URL（例: https://example.com/uploader/）
+            // 空文字の場合は SCRIPT_NAME から自動判定します。
+            'publicBaseUrl' => '',
             'saveMaxFiles' => 500,
             'maxComment' => 80,
             'maxFileSize' => 95,

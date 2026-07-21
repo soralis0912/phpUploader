@@ -11,7 +11,7 @@ declare(strict_types=1);
 $baseDir = dirname(__DIR__, 2);
 $logger = null;
 
-require_once $baseDir . '/src/lib/page_helpers.php';
+require_once $baseDir . '/src/Lib/page_helpers.php';
 
 try {
     $pageContext = phpuploader_initialize_page($baseDir);
@@ -23,14 +23,14 @@ try {
     $repository = new \PHPUploader\Model\FileRepository($db);
     $fileData = $repository->fetchAllPublic();
 
-    $appBasePath = phpuploader_app_base_path();
+    $appBasePath = phpuploader_app_base_path($config);
     $escapedAppBasePath = phpuploader_escape($appBasePath);
     $siteTitle = (string)($config['title'] ?? 'PHP Uploader');
     $ogTitle = $siteTitle;
     $ogDescription = 'ブラウザからファイルをアップロードして共有できるPHP Uploaderです。';
     $ogType = 'website';
-    $ogUrl = phpuploader_absolute_url(phpuploader_request_uri($appBasePath), $appBasePath);
-    $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath);
+    $ogUrl = phpuploader_absolute_url(phpuploader_request_uri($appBasePath), $appBasePath, $config);
+    $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath, $config);
     $escapeMeta = static fn (string $value): string => phpuploader_escape($value);
     $pageHeaderPath = $baseDir . '/src/View/index/header.php';
 

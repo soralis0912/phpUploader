@@ -1,11 +1,4 @@
 <?php
-$scriptDirectory = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
-$appBasePath = $appBasePath ?? (
-    ($scriptDirectory === '/' || $scriptDirectory === '.' || $scriptDirectory === '')
-        ? '/'
-        : rtrim($scriptDirectory, '/') . '/'
-);
-$escapedAppBasePath = $escapedAppBasePath ?? htmlspecialchars($appBasePath, ENT_QUOTES, 'UTF-8');
 $siteTitle = (string)($siteTitle ?? $title ?? 'PHP Uploader');
 $escapeMeta = $escapeMeta ?? static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 ?>

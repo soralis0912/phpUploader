@@ -13,24 +13,17 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1'); // ログファイルにエラーを記録
 error_reporting(E_ALL);
 
+$baseDir = dirname(__DIR__, 2);
+$logger = null;
+$fileId = 0;
+
+require_once $baseDir . '/src/Lib/page_helpers.php';
+
 try {
-    // 設定とユーティリティの読み込み（絶対パスで修正）
-    $baseDir = dirname(__DIR__, 2); // アプリケーションルートディレクトリ
-    require_once $baseDir . '/src/Core/ConfigLoader.php';
-    \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
-    require_once $baseDir . '/src/Core/Logger.php';
-
-    $configInstance = new \PHPUploader\Config();
-    $config = $configInstance->index();
-
-    // アプリケーション初期化
-    require_once $baseDir . '/src/Model/init.php';
-
-    $initInstance = new \PHPUploader\Model\Init($config);
-    $db = $initInstance -> initialize();
-
-    // ログ機能の初期化
-    $logger = new \PHPUploader\Core\Logger($config['logDirectoryPath'], $config['logLevel'], $db);
+    $appContext = phpuploader_initialize_app($baseDir);
+    $config = $appContext['config'];
+    $db = $appContext['db'];
+    $logger = $appContext['logger'];
 
     // パラメータの取得
     $fileId = (int)($_GET['id'] ?? 0);
@@ -145,18 +138,20 @@ try {
         // 成功時のリダイレクト
         header('Location: ./?deleted=success');
         exit;
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         // トランザクションロールバック
         $db->rollBack();
         throw $e;
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     // 緊急時のエラーハンドリング
-    $logger->error('Delete Error: ' . $e->getMessage(), [
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'file_id' => $fileId,
-    ]);
+    if ($logger !== null) {
+        $logger->error('Delete Error: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'file_id' => $fileId,
+        ]);
+    }
 
     header('Location: ./?deleted=error');
     exit;

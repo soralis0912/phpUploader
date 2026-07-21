@@ -14,7 +14,7 @@ if (is_string($requestPath) && preg_match('#^/show/([0-9]+)/?$#', $requestPath, 
 
 if (is_string($requestPath) && preg_match('#^/(?:app/)?api/([a-z]+)\.php$#', $requestPath, $matches) === 1) {
     $_SERVER['SCRIPT_NAME'] = '/api/' . $matches[1] . '.php';
-    require $rootDirectory . '/src/Api/' . $matches[1] . '.php';
+    require $rootDirectory . '/src/Public/api/' . $matches[1] . '.php';
     return true;
 }
 

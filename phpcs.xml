@@ -29,7 +29,7 @@
     <rule ref="PSR1.Files.SideEffects.FoundWithSymbols">
         <!-- ルールを除外 -->
         <exclude-pattern>scripts/release.php</exclude-pattern>
-        <exclude-pattern>src/Api/upload.php</exclude-pattern>
+        <exclude-pattern>src/Public/api/upload.php</exclude-pattern>
     </rule>
 
     <!-- namespace を必須 -->
