@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 
 try {
     // 設定とユーティリティの読み込み（絶対パスで修正）
-    $baseDir = dirname(__FILE__); // アプリケーションルートディレクトリ
+    $baseDir = dirname(__DIR__, 2); // アプリケーションルートディレクトリ
     require_once $baseDir . '/src/Core/ConfigLoader.php';
     \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
     require_once $baseDir . '/src/Core/Logger.php';
@@ -24,7 +24,7 @@ try {
     $config = $configInstance->index();
 
     // アプリケーション初期化
-    require_once $baseDir . '/app/models/init.php';
+    require_once $baseDir . '/src/Model/init.php';
 
     $initInstance = new \PHPUploader\Model\Init($config);
     $db = $initInstance -> initialize();

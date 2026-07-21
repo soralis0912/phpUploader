@@ -74,7 +74,7 @@ test.describe('phpUploader UI', () => {
     await expect(page.locator('#fileInput')).toHaveValue('sample-upload.pdf');
 
     const uploadResponsePromise = page.waitForResponse((response) => (
-      response.url().includes('/app/api/upload.php') &&
+      response.url().includes('/api/upload.php') &&
       response.request().method() === 'POST'
     ));
 
@@ -142,7 +142,7 @@ test.describe('phpUploader UI', () => {
     const uploadResponses = [];
     page.on('response', (response) => {
       if (
-        response.url().includes('/app/api/upload.php') &&
+        response.url().includes('/api/upload.php') &&
         response.request().method() === 'POST'
       ) {
         uploadResponses.push(response);

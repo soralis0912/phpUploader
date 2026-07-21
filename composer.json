@@ -32,10 +32,10 @@
     "autoload": {
         "psr-4": {
             "PHPUploader\\Core\\": "src/Core/",
-            "PHPUploader\\Model\\": "app/models/"
+            "PHPUploader\\Model\\": "src/Model/"
         },
         "classmap": [
-            "app/models/"
+            "src/Model/"
         ]
     },
     "config": {

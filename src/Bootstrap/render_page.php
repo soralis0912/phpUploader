@@ -31,8 +31,8 @@ function render_phpuploader_page(string $baseDir, string $page, string $headerPa
         $page = preg_replace('/[^a-zA-Z0-9_]/', '', $page); // セキュリティ: 英数字とアンダースコアのみ許可
 
         // アプリケーション初期化
-        require_once $baseDir . '/app/models/init.php';
-        require_once $baseDir . '/app/models/FileRepository.php';
+        require_once $baseDir . '/src/Model/init.php';
+        require_once $baseDir . '/src/Model/FileRepository.php';
 
         $initInstance = new \PHPUploader\Model\Init($config);
         $db = $initInstance -> initialize();
@@ -52,7 +52,7 @@ function render_phpuploader_page(string $baseDir, string $page, string $headerPa
 
         // モデルの読み込みと実行
         $modelData = [];
-        $modelPath = $baseDir . "/app/models/{$page}.php";
+        $modelPath = $baseDir . "/src/Model/{$page}.php";
         $modelQueriedName = '\\PHPUploader\\Model\\' . ucfirst($page);
 
         if (file_exists($modelPath)) {
@@ -85,16 +85,16 @@ function render_phpuploader_page(string $baseDir, string $page, string $headerPa
         require $headerPath;
 
         // メインコンテンツの出力
-        $viewPath = $baseDir . "/app/views/{$page}.php";
+        $viewPath = $baseDir . "/src/View/{$page}.php";
         if (file_exists($viewPath)) {
             require $viewPath;
         } else {
             $error = '404 - ページが見つかりません。';
-            require $baseDir . '/app/views/error.php';
+            require $baseDir . '/src/View/error.php';
         }
 
         // フッターの出力
-        require $baseDir . '/app/views/footer.php';
+        require $baseDir . '/src/View/footer.php';
     } catch (Exception $e) {
         // 緊急時のエラーハンドリング
         $errorMessage = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');

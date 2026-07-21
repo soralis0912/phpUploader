@@ -11,4 +11,7 @@ if (file_exists($autoloadPath)) {
 require_once dirname(__DIR__) . '/src/Core/ConfigLoader.php';
 require_once dirname(__DIR__) . '/src/Core/SecurityUtils.php';
 require_once dirname(__DIR__) . '/src/Core/Logger.php';
-require_once dirname(__DIR__) . '/app/models/init.php';
+require_once dirname(__DIR__) . '/src/Model/FileRepository.php';
+require_once dirname(__DIR__) . '/src/Model/init.php';
+require_once dirname(__DIR__) . '/src/Model/index.php';
+require_once dirname(__DIR__) . '/src/Model/download.php';

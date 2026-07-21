@@ -16,8 +16,8 @@ if (empty($_GET['id'])) {
     }
 }
 
-$baseDir = __DIR__;
+$baseDir = dirname(__DIR__, 2);
 
-require_once $baseDir . '/app/bootstrap/render_page.php';
+require_once $baseDir . '/src/Bootstrap/render_page.php';
 
-render_phpuploader_page($baseDir, 'download', $baseDir . '/app/views/show/header.php');
+render_phpuploader_page($baseDir, 'download', $baseDir . '/src/View/show/header.php');

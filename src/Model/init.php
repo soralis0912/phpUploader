@@ -239,9 +239,9 @@ class Init
 
         // エラーページの表示
         $error = '500 - ' . $message;
-        include('./app/views/header.php');
-        include('./app/views/error.php');
-        include('./app/views/footer.php');
+        include dirname(__DIR__) . '/View/header.php';
+        include dirname(__DIR__) . '/View/error.php';
+        include dirname(__DIR__) . '/View/footer.php';
         exit;
     }
 }

@@ -17,7 +17,7 @@
     <source>
         <include>
             <directory>src</directory>
-            <directory>app/models</directory>
+            <directory>src/Model</directory>
         </include>
     </source>
 </phpunit>

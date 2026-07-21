@@ -2,16 +2,10 @@
 
 $finder = PhpCsFixer\Finder::create()
     ->in([
-        __DIR__ . '/app',
         __DIR__ . '/config',
         __DIR__ . '/scripts',
         __DIR__ . '/src',
         __DIR__ . '/tests',
-    ])
-    ->append([
-        __DIR__ . '/index.php',
-        __DIR__ . '/download.php',
-        __DIR__ . '/delete.php',
     ])
     ->exclude([
         'vendor',

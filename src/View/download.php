@@ -14,16 +14,16 @@ $file = $downloadFile ?? null;
           </p>
         </div>
       <?php else : ?>
-        <?php
-        $fileId = (int)$file['id'];
-        $fileName = htmlspecialchars((string)$file['origin_file_name'], ENT_QUOTES, 'UTF-8');
-        $comment = htmlspecialchars((string)($file['comment'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $fileSize = number_format(((int)$file['size']) / 1024 / 1024, 1);
-        $downloadCount = (int)$file['count'];
-        $uploadedAt = date('Y/m/d H:i', (int)$file['input_date']);
-        $hasDownloadKey = (bool)($file['has_download_key'] ?? false);
-        $hasDeleteKey = (bool)($file['has_delete_key'] ?? false);
-        ?>
+          <?php
+            $fileId = (int)$file['id'];
+            $fileName = htmlspecialchars((string)$file['origin_file_name'], ENT_QUOTES, 'UTF-8');
+            $comment = htmlspecialchars((string)($file['comment'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fileSize = number_format(((int)$file['size']) / 1024 / 1024, 1);
+            $downloadCount = (int)$file['count'];
+            $uploadedAt = date('Y/m/d H:i', (int)$file['input_date']);
+            $hasDownloadKey = (bool)($file['has_download_key'] ?? false);
+            $hasDeleteKey = (bool)($file['has_delete_key'] ?? false);
+            ?>
         <div class="download-page">
           <p class="h2">ファイル詳細</p>
 

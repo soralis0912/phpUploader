@@ -172,7 +172,7 @@ function file_upload()
 
   function createUploadRequest(formdata, progressCallback) {
     return $.ajax({
-      url  : appUrl('app/api/upload.php'),
+      url  : appUrl('api/upload.php'),
       type : 'POST',
       data : formdata,
       cache       : false,
@@ -370,7 +370,7 @@ function dl_certificat(id, key){
   };
 
   $.ajax({
-    url  : appUrl('app/api/verifydownload.php'),
+    url  : appUrl('api/verifydownload.php'),
     type : 'POST',
     data : postdata,
     dataType    : 'json'
@@ -464,7 +464,7 @@ function del_certificat(id, key){
   };
 
   $.ajax({
-    url  : appUrl('app/api/verifydelete.php'),
+    url  : appUrl('api/verifydelete.php'),
     type : 'POST',
     data : postdata,
     dataType    : 'json'
