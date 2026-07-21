@@ -237,11 +237,6 @@ class Init
             file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
         }
 
-        // エラーページの表示
-        $error = '500 - ' . $message;
-        include dirname(__DIR__) . '/View/header.php';
-        include dirname(__DIR__) . '/View/error.php';
-        include dirname(__DIR__) . '/View/footer.php';
-        exit;
+        throw new \RuntimeException($message);
     }
 }
