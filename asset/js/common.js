@@ -476,10 +476,6 @@ function del_certificat(id, key){
     } else if (data.status === 'error') {
       // Ver.2.0のエラーレスポンス
       if (data.error_code === 'AUTH_REQUIRED' || data.error_code === 'INVALID_KEY') {
-        if (document.getElementById('downloadPage')) {
-          showError(data.message || '削除キーを入力してください。');
-          return;
-        }
         // 認証が必要
         var html = '<div class="form-group">' +
                   '<label for="confirmDelkeyInput">DELキーの入力</label>' +

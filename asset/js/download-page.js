@@ -5,5 +5,5 @@ function download_page_submit(id) {
 
 function delete_page_submit(id) {
   $('#errorContainer').fadeOut();
-  del_certificat(id, $('#deleteKeyInput').val() || '');
+  del_certificat(id, '');
 }

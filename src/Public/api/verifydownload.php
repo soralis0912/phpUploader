@@ -21,7 +21,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 try {
     // 設定とユーティリティの読み込み（絶対パスで修正）
-    $baseDir = dirname(__DIR__, 2); // アプリケーションルートディレクトリ
+    $baseDir = dirname(__DIR__, 3); // アプリケーションルートディレクトリ
     require_once $baseDir . '/src/Core/ConfigLoader.php';
     \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
     require_once $baseDir . '/src/Core/Logger.php';

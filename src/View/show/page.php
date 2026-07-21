@@ -61,18 +61,6 @@
           </form>
 
           <form class="delete-form" onsubmit="delete_page_submit(<?php echo $downloadView['fileId']; ?>); return false;">
-            <?php if ($downloadView['hasDeleteKey']) : ?>
-              <div class="form-group">
-                <label for="deleteKeyInput">削除キー</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="deleteKeyInput"
-                  name="delete_key"
-                  placeholder="削除キーを入力">
-              </div>
-            <?php endif; ?>
-
             <button type="submit" class="btn btn-danger">🗑️ 削除</button>
           </form>
         </div>

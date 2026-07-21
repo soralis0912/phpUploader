@@ -122,8 +122,12 @@ test.describe('phpUploader UI', () => {
     await expect(page.locator('#downloadPage')).not.toContainText('ID:');
     await expect(page.locator('#downloadPage')).not.toContainText('このファイルのページ');
     await expect(page.locator('#downloadPage')).not.toContainText('ダウンロードキー');
-    await expect(page.locator('#downloadPage')).toContainText('削除キー');
+    await expect(page.locator('#downloadPage')).not.toContainText('削除キー');
     await expect(page.locator('#downloadPage a[href*="download.php"]')).toHaveCount(0);
+    await page.getByRole('button', { name: /削除/ }).click();
+    await expect(page.locator('#OKCanselModal')).toBeVisible();
+    await expect(page.locator('#OKCanselModal')).toContainText('DELキーの入力');
+    await expect(page.locator('#confirmDelkeyInput')).toBeVisible();
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
       'sample-upload.pdf | PHP Uploader'
