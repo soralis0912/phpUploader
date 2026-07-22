@@ -30,17 +30,6 @@
   }
 }
 
-/* タブレット向け調整 */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .file-cards-container {
-    display: none;
-  }
-  
-  .file-table-container {
-    display: block;
-  }
-}
-
 /* 印刷時の調整 */
 @media print {
   .btn, .file-card__toggle, .upload-progress {

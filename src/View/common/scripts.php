@@ -1,12 +1,12 @@
 <?php
 $assetJsVersions = [];
-$assetJsFiles = [
+$commonScripts = [
+    'modal.js',
     'app-url.js',
-    'file-manager.js',
-    'upload-result.js',
-    'download-page.js',
     'common.js',
 ];
+$pageScripts = isset($pageScripts) && is_array($pageScripts) ? $pageScripts : [];
+$assetJsFiles = array_values(array_unique(array_merge($commonScripts, $pageScripts)));
 
 foreach ($assetJsFiles as $assetJsFile) {
     $assetJsPath = dirname(__DIR__, 3) . '/asset/js/' . $assetJsFile;
@@ -14,25 +14,19 @@ foreach ($assetJsFiles as $assetJsFile) {
         ? (string)filemtime($assetJsPath)
         : ($version ?? 'dev');
 }
-
-$appUrlJs = $escapedAppBasePath . 'asset/js/app-url.js?v=' . rawurlencode($assetJsVersions['app-url.js']);
-$fileManagerJs = $escapedAppBasePath . 'asset/js/file-manager.js?v=' .
-    rawurlencode($assetJsVersions['file-manager.js']);
-$uploadResultJs = $escapedAppBasePath . 'asset/js/upload-result.js?v=' .
-    rawurlencode($assetJsVersions['upload-result.js']);
-$downloadPageJs = $escapedAppBasePath . 'asset/js/download-page.js?v=' .
-    rawurlencode($assetJsVersions['download-page.js']);
-$commonJsVersion = $assetJsVersions['common.js'];
-$commonJs = $escapedAppBasePath . 'asset/js/common.js?v=' . rawurlencode($commonJsVersion);
 ?>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script
-      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
       crossorigin="anonymous"></script>
-    <script src="<?php echo $escapedAppBasePath; ?>asset/js/modal.js"></script>
-    <script src="<?php echo $appUrlJs; ?>"></script>
-    <script src="<?php echo $fileManagerJs; ?>"></script>
-    <script src="<?php echo $uploadResultJs; ?>"></script>
-    <script src="<?php echo $downloadPageJs; ?>"></script>
-    <script src="<?php echo $commonJs; ?>"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+      integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+      crossorigin="anonymous"></script>
+<?php foreach ($assetJsFiles as $assetJsFile) : ?>
+<?php
+    $assetJsUrl = $escapedAppBasePath . 'asset/js/' . rawurlencode($assetJsFile)
+        . '?v=' . rawurlencode($assetJsVersions[$assetJsFile]);
+?>
+    <script src="<?php echo $assetJsUrl; ?>"></script>
+<?php endforeach; ?>

@@ -20,6 +20,13 @@ test.describe('phpUploader UI', () => {
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
   });
 
+  test('requires the router to pass a show id', async ({ page }) => {
+    const response = await page.goto('/show.php');
+
+    expect(response.status()).toBe(404);
+    await expect(page.locator('#downloadPage')).toContainText('ファイルが見つかりません');
+  });
+
   test('shows a client-side error when no file is selected', async ({ page }) => {
     await page.getByRole('button', { name: /アップロード/ }).click();
 

@@ -8,21 +8,12 @@ $logger = null;
 require_once $baseDir . '/src/Lib/page_helpers.php';
 
 try {
-    if (empty($_GET['id'])) {
-        $pathInfo = $_SERVER['PATH_INFO'] ?? '';
-        if (preg_match('#^/([0-9]+)$#', $pathInfo, $matches) === 1) {
-            $_GET['id'] = $matches[1];
-        }
-    }
-
-    if (empty($_GET['id'])) {
-        $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-        if (is_string($requestPath) && preg_match('#/show/([0-9]+)/?$#', $requestPath, $matches) === 1) {
-            $_GET['id'] = $matches[1];
-        }
-    }
-
-    $fileId = (int)($_GET['id'] ?? 0);
+    $fileId = filter_var(
+        $_GET['id'] ?? null,
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+    $fileId = is_int($fileId) ? $fileId : 0;
 
     $pageContext = phpuploader_initialize_page($baseDir);
     $config = $pageContext['config'];
@@ -32,6 +23,10 @@ try {
 
     $repository = new \PHPUploader\Model\FileRepository($db);
     $downloadFile = $fileId > 0 ? $repository->findDetailById($fileId) : null;
+
+    if ($downloadFile === null) {
+        http_response_code(404);
+    }
 
     $appBasePath = phpuploader_app_base_path($config);
     $escapedAppBasePath = phpuploader_escape($appBasePath);
@@ -65,6 +60,7 @@ try {
     $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath, $config);
     $escapeMeta = static fn (string $value): string => phpuploader_escape($value);
     $pageHeaderPath = $baseDir . '/src/View/show/header.php';
+    $pageScripts = ['show-page.js'];
 
     $csrfToken = \PHPUploader\Core\SecurityUtils::generateCSRFToken();
     $escapedCsrfToken = phpuploader_escape($csrfToken);

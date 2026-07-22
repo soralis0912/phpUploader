@@ -9,17 +9,11 @@ $escapeMeta = $escapeMeta ?? static fn (string $value): string => htmlspecialcha
 
     <link
       rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+      integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu"
       crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css">
 
     <link rel="stylesheet" href="<?php echo $escapedAppBasePath; ?>asset/css/common.css">
     <link rel="stylesheet" href="<?php echo $escapedAppBasePath; ?>asset/css/responsive.css">
     <link rel="stylesheet" href="<?php echo $escapedAppBasePath; ?>asset/css/responsive-extra.css">
     <link rel="stylesheet" href="<?php echo $escapedAppBasePath; ?>asset/css/file-manager.css">
-
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->

@@ -33,6 +33,7 @@ try {
     $ogImageUrl = phpuploader_absolute_url($appBasePath . 'image/cover.png', $appBasePath, $config);
     $escapeMeta = static fn (string $value): string => phpuploader_escape($value);
     $pageHeaderPath = $baseDir . '/src/View/index/header.php';
+    $pageScripts = ['file-manager.js', 'upload-result.js', 'index-page.js'];
 
     $csrfToken = \PHPUploader\Core\SecurityUtils::generateCSRFToken();
     $statusMessage = $_GET['deleted'] ?? null;

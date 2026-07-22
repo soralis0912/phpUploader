@@ -2,17 +2,7 @@
    PHP Uploader Ver.2.0 - レスポンシブ対応CSS
    ================================================= */
 
-/* モバイル対応のカード型レイアウト */
 @media (max-width: 768px) {
-  /* テーブル表示を隠してカード表示に切り替え */
-  .file-table-container {
-    display: none !important;
-  }
-  
-  .file-cards-container {
-    display: block !important;
-  }
-  
   /* アップロードフォームの調整 */
   .upload-form .row .col-sm-6 {
     margin-bottom: 15px;
@@ -29,25 +19,9 @@
   }
 }
 
-@media (min-width: 769px) {
-  /* デスクトップ表示時はカードを隠してテーブル表示 */
-  .file-table-container {
-    display: block !important;
-  }
-  
-  .file-cards-container {
-    display: none !important;
-  }
-}
-
 /* ===================================================
    カード型レイアウトのスタイル
    ================================================= */
-
-.file-cards-container {
-  display: none; /* デフォルトは非表示 */
-  margin-top: 20px;
-}
 
 .file-card {
   background: #fff;

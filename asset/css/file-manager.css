@@ -625,13 +625,3 @@
     gap: 4px;
   }
 }
-
-/* === 隠しクラス（DataTables削除用） === */
-.file-table-container {
-  display: none !important;
-}
-
-/* DataTablesスタイルの上書き */
-.dataTables_wrapper {
-  display: none !important;
-}
