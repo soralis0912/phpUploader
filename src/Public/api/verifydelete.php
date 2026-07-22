@@ -20,25 +20,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 try {
-    // 設定とユーティリティの読み込み（絶対パスで修正）
-    $baseDir = dirname(__DIR__, 3); // アプリケーションルートディレクトリ
-    require_once $baseDir . '/src/Core/ConfigLoader.php';
-    \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
-    require_once $baseDir . '/src/Core/Logger.php';
-    require_once $baseDir . '/src/Core/ResponseHandler.php';
-
-    $configInstance = new \PHPUploader\Config();
-    $config = $configInstance->index();
-
-    // アプリケーション初期化
-    require_once $baseDir . '/src/Model/init.php';
-
-    $initInstance = new \PHPUploader\Model\Init($config);
-    $db = $initInstance -> initialize();
-
-    // ログとレスポンスハンドラーの初期化
-    $logger = new \PHPUploader\Core\Logger($config['logDirectoryPath'], $config['logLevel'], $db);
-    $responseHandler = new \PHPUploader\Core\ResponseHandler($logger);
+    require_once dirname(__DIR__, 2) . '/Lib/page_helpers.php';
+    $baseDir = phpuploader_project_root();
+    $appContext = phpuploader_initialize_app($baseDir);
+    $config = $appContext['config'];
+    $db = $appContext['db'];
+    $logger = $appContext['logger'];
+    $responseHandler = $appContext['responseHandler'];
 
     // 入力データの取得
     $fileId = (int)($_POST['id'] ?? 0);
@@ -132,13 +120,24 @@ try {
         'expires_at' => $expiresAt,
         'file_name' => $fileData['origin_file_name'],
     ]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     // 緊急時のエラーハンドリング
-    $logger->error('Delete verify API Error: ' . $e->getMessage(), [
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'file_id' => $fileId,
-    ]);
+    if (isset($logger)) {
+        $logger->error('Delete verify API Error: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'file_id' => $fileId ?? 0,
+        ]);
+    }
 
-    $responseHandler->error('システムエラーが発生しました。', [], 500);
+    if (isset($responseHandler)) {
+        $responseHandler->error('システムエラーが発生しました。', [], 500);
+    }
+
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'システムエラーが発生しました。',
+        'timestamp' => date('c'),
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }

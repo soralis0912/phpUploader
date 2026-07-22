@@ -513,25 +513,13 @@ function handleChunkedUpload(
 }
 
 try {
-    // 設定とユーティリティの読み込み（絶対パスで修正）
-    $baseDir = dirname(__DIR__, 3); // アプリケーションルートディレクトリ
-    require_once $baseDir . '/src/Core/ConfigLoader.php';
-    \PHPUploader\Core\ConfigLoader::requireConfig($baseDir);
-    require_once $baseDir . '/src/Core/Logger.php';
-    require_once $baseDir . '/src/Core/ResponseHandler.php';
-
-    $configInstance = new \PHPUploader\Config();
-    $config = $configInstance->index();
-
-    // アプリケーション初期化
-    require_once $baseDir . '/src/Model/init.php';
-
-    $initInstance = new \PHPUploader\Model\Init($config);
-    $db = $initInstance -> initialize();
-
-    // ログとレスポンスハンドラーの初期化
-    $logger = new \PHPUploader\Core\Logger($config['logDirectoryPath'], $config['logLevel'], $db);
-    $responseHandler = new \PHPUploader\Core\ResponseHandler($logger);
+    require_once dirname(__DIR__, 2) . '/Lib/page_helpers.php';
+    $baseDir = phpuploader_project_root();
+    $appContext = phpuploader_initialize_app($baseDir);
+    $config = $appContext['config'];
+    $db = $appContext['db'];
+    $logger = $appContext['logger'];
+    $responseHandler = $appContext['responseHandler'];
 
     // リクエストメソッドの確認
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

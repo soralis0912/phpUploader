@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+function phpuploader_project_root(): string
+{
+    return dirname(__DIR__, 2);
+}
+
 function phpuploader_initialize_page(string $baseDir): array
 {
     $context = phpuploader_initialize_app($baseDir);
