@@ -9,8 +9,80 @@ $(document).ready(function(){
   fileManager.setFiles(window.fileData || []);
   window.fileManagerInstance = fileManager;
 
+  var selectedUploadFile = null;
+
+  function updateSelectedFile(file) {
+    selectedUploadFile = file || null;
+    window.selectedUploadFile = selectedUploadFile;
+    $('#fileInput').val(file ? file.name : '');
+  }
+
+  function setInputFiles(files) {
+    var fileInput = $('#lefile').get(0);
+    if (!fileInput || !files || files.length === 0) {
+      updateSelectedFile(null);
+      return;
+    }
+
+    var file = files[0];
+    if (window.DataTransfer) {
+      try {
+        var dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+      } catch (error) {
+        // Some browsers expose DataTransfer but keep input.files read-only.
+      }
+    }
+
+    updateSelectedFile(file);
+  }
+
   $('input[id=lefile]').change(function() {
-    $('#fileInput').val($(this).val().replace('C:\\fakepath\\', ''));
+    var file = this.files && this.files.length > 0 ? this.files[0] : null;
+    updateSelectedFile(file);
+  });
+
+  var dropZone = $('#uploadDropZone');
+  dropZone.on('click', function(event) {
+    if ($(event.target).closest('button').length > 0) {
+      return;
+    }
+
+    $('#lefile').trigger('click');
+  });
+
+  dropZone.on('keydown', function(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      $('#lefile').trigger('click');
+    }
+  });
+
+  dropZone.on('dragenter dragover', function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    dropZone.addClass('upload-drop-zone--active');
+  });
+
+  dropZone.on('dragleave dragend drop', function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    dropZone.removeClass('upload-drop-zone--active');
+  });
+
+  dropZone.on('drop', function(event) {
+    var files = event.originalEvent &&
+      event.originalEvent.dataTransfer &&
+      event.originalEvent.dataTransfer.files;
+    setInputFiles(files);
+  });
+
+  $(document).on('dragover drop', function(event) {
+    var dataTransfer = event.originalEvent && event.originalEvent.dataTransfer;
+    if (dataTransfer && dataTransfer.types && Array.prototype.indexOf.call(dataTransfer.types, 'Files') !== -1) {
+      event.preventDefault();
+    }
   });
 
   // ステータスメッセージの自動非表示
@@ -44,13 +116,10 @@ function file_upload()
     return;
   }
 
-  if($('#fileInput').val() == ''){
-    showError('ファイルを選択してください。');
-    return;
-  }
-
   var fileInput = $('#lefile').get(0);
-  var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+  var file = fileInput && fileInput.files && fileInput.files.length > 0
+    ? fileInput.files[0]
+    : window.selectedUploadFile || null;
   if (!file) {
     showError('ファイルを選択してください。');
     return;
@@ -196,6 +265,7 @@ function file_upload()
       }
       $('#upload')[0].reset();
       $('#fileInput').val('');
+      window.selectedUploadFile = null;
     } else if (data.status === 'error') {
       var errorMessage = '';
 

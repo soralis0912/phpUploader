@@ -10,13 +10,24 @@
 
       <div class="form-section file-input-group">
         <input id="lefile" name="file" type="file" style="display:none">
-        <div class="input-group">
-          <input type="text" id="fileInput" class="form-control" placeholder="ファイルを選択..." readonly>
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-primary" onclick="$('input[id=lefile]').click();">
-              📁 ファイル選択
-            </button>
-          </span>
+        <div
+          id="uploadDropZone"
+          class="upload-drop-zone"
+          role="button"
+          tabindex="0"
+          aria-label="ファイルを選択またはドロップ">
+          <div class="upload-drop-zone__message">
+            <strong>ここにファイルをドロップ</strong>
+            <span>またはファイルを選択</span>
+          </div>
+          <div class="input-group">
+            <input type="text" id="fileInput" class="form-control" placeholder="ファイルを選択..." readonly>
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-primary" onclick="$('input[id=lefile]').click();">
+                📁 ファイル選択
+              </button>
+            </span>
+          </div>
         </div>
         <p class="help-block">
           📊 最大<?php echo $escapedMaxFileSize; ?>MBまでアップロード可能<br>

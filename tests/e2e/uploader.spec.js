@@ -174,4 +174,36 @@ test.describe('phpUploader UI', () => {
       size: 2 * 1024 * 1024 + 123
     }));
   });
+
+  test('uploads a dropped file', async ({ page }) => {
+    const fixturePath = path.join(__dirname, 'fixtures', 'sample-upload.pdf');
+    const dataTransfer = await page.evaluateHandle(({ fileName, bytes }) => {
+      const transfer = new DataTransfer();
+      const file = new File([new Uint8Array(bytes)], fileName, { type: 'application/pdf' });
+      transfer.items.add(file);
+      return transfer;
+    }, {
+      fileName: 'dropped-upload.pdf',
+      bytes: Array.from(fs.readFileSync(fixturePath))
+    });
+
+    await page.locator('#uploadDropZone').dispatchEvent('dragenter', { dataTransfer });
+    await expect(page.locator('#uploadDropZone')).toHaveClass(/upload-drop-zone--active/);
+    await page.locator('#uploadDropZone').dispatchEvent('drop', { dataTransfer });
+    await expect(page.locator('#fileInput')).toHaveValue('dropped-upload.pdf');
+
+    const uploadResponsePromise = page.waitForResponse((response) => (
+      response.url().includes('/api/upload.php') &&
+      response.request().method() === 'POST'
+    ));
+
+    await page.getByRole('button', { name: /アップロード/ }).click();
+
+    const uploadResponse = await uploadResponsePromise;
+    expect(uploadResponse.ok()).toBeTruthy();
+
+    const payload = await uploadResponse.json();
+    expect(payload.status).toBe('success');
+    await expect(page.getByRole('link', { name: /dropped-upload\.pdf/ })).toBeVisible();
+  });
 });
